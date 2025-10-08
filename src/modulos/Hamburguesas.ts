@@ -4,11 +4,11 @@ import path from "path";
 const filePath = path.join(process.cwd(), "HamburguesasDB.json");
 
 export default class Hamburguesas{
-    private my = null
+    static my = null
     private userStorage = new DataStorage<any>(new JSONFileAdapter(filePath));
     constructor(){
-        if (this.my == null) this.my = new Hamburguesas();
-        return this.my;
+        if (Hamburguesas.my == null) Hamburguesas.my = new Hamburguesas();
+        return Hamburguesas.my;
     }
     async add(id:string, data:any){
         await this.userStorage.save(id, data);
