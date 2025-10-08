@@ -1,26 +1,15 @@
 import { Hono } from 'hono'
+import Hamburguesas from '../modulos/Hamburguesas';
+const Databases = {
+  Hamburguesas: Hamburguesas.my
+}
+
 const databases = new Map<string, Map<string, Map<string, any>>>();
 const syncRoute = new Hono()
-syncRoute.get('/sync/:dbName/:storeName', (c) => {
+syncRoute.get('/sync/:dbName/:storeName', async (c) => {
   const { dbName, storeName } = c.req.param();
-  
-  if (!databases.has(dbName)) {
-    return c.json({ data: [] });
-  }
-  
-  const db = databases.get(dbName)!;
-  if (!db.has(storeName)) {
-    return c.json({ data: [] });
-  }
-  
-  const store = db.get(storeName);
-  const data = Array.from(store.values());
-  
-  return c.json({ 
-    data,
-    count: data.length,
-    timestamp: new Date().toISOString()
-  });
+  if (!Databases[dbName]) return c.json({ data: [] });
+  return await Databases[dbName].get(storeName)
 });
 
 syncRoute.post('/sync/:dbName/:storeName', async (c) => {
