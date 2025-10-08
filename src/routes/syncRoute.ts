@@ -9,7 +9,13 @@ const syncRoute = new Hono()
 syncRoute.get('/sync/:dbName/:storeName', async (c) => {
   const { dbName, storeName } = c.req.param();
   if (!Databases[dbName]) return c.json({ data: [] });
-  return await Databases[dbName].get(storeName)
+  const resultQuery = await Databases[dbName].get(storeName)
+  const result = {
+    resultQuery,
+    count: resultQuery.length,
+    timestamp: new Date().toISOString()
+  }
+  return c.json(result)
 });
 
 syncRoute.post('/sync/:dbName/:storeName', async (c) => {
