@@ -2,6 +2,9 @@
   "compilerOptions": {
     "strict": false,
     "jsx": "react-jsx",
-    "jsxImportSource": "hono/jsx"
+    "jsxImportSource": "hono/jsx",
+    "moduleResolution": "bundler",  // o "node16" / "nodenext"
+    "module": "ESNext",
+    "target": "ESNext"
   }
 }
