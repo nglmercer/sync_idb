@@ -7,17 +7,20 @@ export default class Hamburguesas{
     private my = null
     private userStorage = new DataStorage<any>(new JSONFileAdapter(filePath));
     constructor(){
-        if (this.my == null) this.my = new Hamburguesas()
-        return this.my
+        if (this.my == null) this.my = new Hamburguesas();
+        return this.my;
     }
     async add(id:string, data:any){
         await this.userStorage.save(id, data);
     }
     async get(id:string){
-        const user = await this.userStorage.load(id);
+        return await this.userStorage.load(id);
     }
-    async delete(){
-
+    async delete(id:string){
+        await this.userStorage.delete(id);
+    }
+    async all(){
+        return await this.userStorage.getAll();
     }
 }
 
