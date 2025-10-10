@@ -1,11 +1,19 @@
 import { Hono } from 'hono';
-import DefaultDB from '../modulos/DefautlDB';
+import { DataStorage } from 'json-obj-manager';
+import { JSONFileAdapter } from 'json-obj-manager/node';
+import path from "path";
+
+const PointSalesPath = path.join(process.cwd(), "./PointSales.json");
+
+interface TimestampedData {
+  created_at: string;
+  updated_at: string;
+  [key: string]: any;
+}
 
 const Databases = {
-  DefautlDB: DefaultDB.my
+  PointSales: new DataStorage<TimestampedData>(new JSONFileAdapter(PointSalesPath)),
 };
-
-const databases = new Map<string, Map<string, Map<string, any>>>();
 
 const syncRoute = new Hono();
 
@@ -32,14 +40,19 @@ syncRoute.get('/sync/:dbName/:storeName', async (c) => {
   const { dbName, storeName } = c.req.param();
   
   if (!Databases[dbName]) {
-    return c.json({ data: [] });
+    return c.json({ data: [], message: 'Database not found: ' + dbName }, 404);
   }
   
-  const resultQuery = await Databases[dbName].get(storeName);
+  const db = Databases[dbName] as DataStorage<TimestampedData>;
+  const data = await db.load(storeName);
+  console.log(" data:", data,storeName,dbName);
+  if (!data) {
+    return c.json({ data: [], count: 0, timestamp: new Date().toISOString() });
+  }
   
   return c.json({
-    data: resultQuery,
-    count: resultQuery.length,
+    data: data,
+    count: 1,
     timestamp: new Date().toISOString()
   });
 });
@@ -54,41 +67,26 @@ syncRoute.post('/sync/:dbName/:storeName', async (c) => {
     return c.json({ error: 'Data must be an array' }, 400);
   }
   
-  // Inicializar DB y store si no existen
-  if (!databases.has(dbName)) {
-    databases.set(dbName, new Map());
+  if (!Databases[dbName]) {
+    return c.json({ error: 'Database not found: ' + dbName }, 404);
   }
   
-  const db = databases.get(dbName)!;
-  if (!db.has(storeName)) {
-    db.set(storeName, new Map());
-  }
+  const db = Databases[dbName] as DataStorage<TimestampedData>;
   
-  const store = db.get(storeName)!;
-  let created = 0;
-  let updated = 0;
+  // Guardar los datos con timestamps
+  const timestampedData = {
+    data,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
   
-  // Guardar cada item con timestamps
-  data.forEach(item => {
-    const id = item.id || item.dni || item.ticketID;
-    if (id) {
-      const exists = store.has(id);
-      const timestampedItem = addTimestamps(item, exists);
-      store.set(id, timestampedItem);
-      
-      if (exists) {
-        updated++;
-      } else {
-        created++;
-      }
-    }
-  });
+  await db.save(storeName, timestampedData as any);
   
   return c.json({
     success: true,
     synced: data.length,
-    created,
-    updated,
+    created: data.length,
+    updated: 0,
     timestamp: new Date().toISOString()
   });
 });
@@ -98,19 +96,18 @@ syncRoute.put('/sync/:dbName/:storeName/:id', async (c) => {
   const { dbName, storeName, id } = c.req.param();
   const body = await c.req.json();
   
-  // Inicializar si no existe
-  if (!databases.has(dbName)) {
-    databases.set(dbName, new Map());
+  if (!Databases[dbName]) {
+    return c.json({ error: 'Database not found: ' + dbName }, 404);
   }
+
+  const db = Databases[dbName] as DataStorage<TimestampedData>;
   
-  const db = databases.get(dbName)!;
-  if (!db.has(storeName)) {
-    db.set(storeName, new Map());
-  }
+  // Cargar datos existentes
+  const storeData = await db.load(storeName);
+  const store = storeData && typeof storeData === 'object' ? storeData : {};
   
-  const store = db.get(storeName)!;
-  const exists = store.has(id);
-  const existing = exists ? store.get(id) : null;
+  const exists = store.hasOwnProperty(id);
+  const existing = exists ? store[id] : null;
   
   // Añadir timestamps preservando created_at si existe
   const timestampedData = addTimestamps(
@@ -118,7 +115,10 @@ syncRoute.put('/sync/:dbName/:storeName/:id', async (c) => {
     exists
   );
   
-  store.set(id, timestampedData);
+  store[id] = timestampedData;
+  
+  // Guardar el store actualizado
+  await db.save(storeName, store as any);
   
   return c.json({
     success: true,
@@ -133,20 +133,26 @@ syncRoute.patch('/sync/:dbName/:storeName/:id', async (c) => {
   const { dbName, storeName, id } = c.req.param();
   const body = await c.req.json();
   
-  if (!databases.has(dbName) || !databases.get(dbName)!.has(storeName)) {
+  if (!Databases[dbName]) {
+    return c.json({ error: 'Database not found: ' + dbName }, 404);
+  }
+  
+  const db = Databases[dbName] as DataStorage<TimestampedData>;
+  const storeData = await db.load(storeName);
+  
+  if (!storeData || typeof storeData !== 'object') {
     return c.json({ error: 'Store not found' }, 404);
   }
   
-  const store = databases.get(dbName)!.get(storeName)!;
-  
-  if (!store.has(id)) {
+  if (!storeData.hasOwnProperty(id)) {
     return c.json({ error: 'Record not found' }, 404);
   }
   
-  const existing = store.get(id)!;
+  const existing = storeData[id];
   const updated = addTimestamps({ ...existing, ...body }, true);
   
-  store.set(id, updated);
+  storeData[id] = updated;
+  await db.save(storeName, storeData as any);
   
   return c.json({
     success: true,
@@ -157,15 +163,25 @@ syncRoute.patch('/sync/:dbName/:storeName/:id', async (c) => {
 });
 
 // DELETE - Eliminar un registro
-syncRoute.delete('/sync/:dbName/:storeName/:id', (c) => {
+syncRoute.delete('/sync/:dbName/:storeName/:id', async (c) => {
   const { dbName, storeName, id } = c.req.param();
   
-  if (!databases.has(dbName) || !databases.get(dbName)!.has(storeName)) {
+  if (!Databases[dbName]) {
+    return c.json({ error: 'Database not found: ' + dbName }, 404);
+  }
+  
+  const db = Databases[dbName] as DataStorage<TimestampedData>;
+  const storeData = await db.load(storeName);
+  
+  if (!storeData || typeof storeData !== 'object') {
     return c.json({ error: 'Store not found' }, 404);
   }
   
-  const store = databases.get(dbName)!.get(storeName)!;
-  const deleted = store.delete(id);
+  const deleted = delete storeData[id];
+  
+  if (deleted) {
+    await db.save(storeName, storeData as any);
+  }
   
   return c.json({
     success: deleted,
@@ -174,18 +190,24 @@ syncRoute.delete('/sync/:dbName/:storeName/:id', (c) => {
 });
 
 // GET - Obtener registros modificados después de una fecha
-syncRoute.get('/sync/:dbName/:storeName/since/:timestamp', (c) => {
+syncRoute.get('/sync/:dbName/:storeName/since/:timestamp', async (c) => {
   const { dbName, storeName, timestamp } = c.req.param();
   
-  if (!databases.has(dbName) || !databases.get(dbName)!.has(storeName)) {
+  if (!Databases[dbName]) {
     return c.json({ data: [], count: 0 });
   }
   
-  const store = databases.get(dbName)!.get(storeName)!;
+  const db = Databases[dbName] as DataStorage<TimestampedData>;
+  const storeData = await db.load(storeName);
+  
+  if (!storeData || typeof storeData !== 'object') {
+    return c.json({ data: [], count: 0 });
+  }
+  
   const sinceDate = new Date(timestamp);
   
-  const results = Array.from(store.values()).filter(item => {
-    return new Date(item.updated_at) > sinceDate;
+  const results = Object.values(storeData).filter((item: any) => {
+    return item.updated_at && new Date(item.updated_at) > sinceDate;
   });
   
   return c.json({
@@ -196,15 +218,21 @@ syncRoute.get('/sync/:dbName/:storeName/since/:timestamp', (c) => {
 });
 
 // GET - Estadísticas de un store
-syncRoute.get('/sync/:dbName/:storeName/stats', (c) => {
+syncRoute.get('/sync/:dbName/:storeName/stats', async (c) => {
   const { dbName, storeName } = c.req.param();
   
-  if (!databases.has(dbName) || !databases.get(dbName)!.has(storeName)) {
+  if (!Databases[dbName]) {
+    return c.json({ error: 'Database not found: ' + dbName }, 404);
+  }
+  
+  const db = Databases[dbName] as DataStorage<TimestampedData>;
+  const storeData = await db.load(storeName);
+  
+  if (!storeData || typeof storeData !== 'object') {
     return c.json({ error: 'Store not found' }, 404);
   }
   
-  const store = databases.get(dbName)!.get(storeName)!;
-  const items = Array.from(store.values());
+  const items = Object.values(storeData) as TimestampedData[];
   
   const now = Date.now();
   const last24h = items.filter(item => 

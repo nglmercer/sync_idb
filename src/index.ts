@@ -85,7 +85,7 @@ app.get('/ws', upgradeWebSocket(() => {
     }
   };
 }));
-
+app.get('/', (c) => c.json({ message: 'API is running' }));
 // Otras rutas
 app.route('/api', backupRoute);
 app.route('/api', syncRoute);

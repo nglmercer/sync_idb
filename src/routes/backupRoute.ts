@@ -1,12 +1,15 @@
 import { Hono } from 'hono';
+import BackupManager from '../modulos/BackupManager';
 
 const databases = new Map<string, Map<string, Map<string, any>>>();
+const backupManager = new BackupManager();
 
 const backupRoute = new Hono();
 
-// GET - Hacer backup de una base de datos completa
-backupRoute.get('/backup/:dbName', (c) => {
+// GET - Hacer backup de una base de datos completa y guardarlo en archivo
+backupRoute.get('/backup/:dbName', async (c) => {
   const { dbName } = c.req.param();
+  const { autoSave = 'true' } = c.req.query();
  
   if (!databases.has(dbName)) {
     return c.json({ error: 'Database not found' }, 404);
@@ -18,6 +21,12 @@ backupRoute.get('/backup/:dbName', (c) => {
   db.forEach((store, storeName) => {
     backup[storeName] = Array.from(store.values());
   });
+
+  // Guardar automáticamente en archivo si autoSave es true
+  let savedMetadata = null;
+  if (autoSave === 'true') {
+    savedMetadata = await backupManager.saveBackup(dbName, backup, 'full');
+  }
   
   return c.json({
     database: dbName,
@@ -25,6 +34,8 @@ backupRoute.get('/backup/:dbName', (c) => {
     timestamp: new Date().toISOString(),
     stores: Object.keys(backup),
     totalRecords: Object.values(backup).reduce((sum, arr) => sum + arr.length, 0),
+    saved: autoSave === 'true',
+    backupId: savedMetadata?.id,
     metadata: {
       version: '1.0',
       created_at: new Date().toISOString()
@@ -32,15 +43,57 @@ backupRoute.get('/backup/:dbName', (c) => {
   });
 });
 
-// POST - Restaurar backup
-backupRoute.post('/backup/:dbName/restore', async (c) => {
+// POST - Crear backup manualmente con opciones personalizadas
+backupRoute.post('/backup/:dbName/create', async (c) => {
   const { dbName } = c.req.param();
   const body = await c.req.json();
-  const { backup, overwrite = false, mergeStrategy = 'newer' } = body;
+  const { stores = null, type = 'full' } = body;
  
-  if (!backup || typeof backup !== 'object') {
-    return c.json({ error: 'Invalid backup format' }, 400);
+  if (!databases.has(dbName)) {
+    return c.json({ error: 'Database not found' }, 404);
   }
+  
+  const db = databases.get(dbName)!;
+  const backup: Record<string, any[]> = {};
+  
+  // Si se especifican stores, solo respaldar esos
+  const storesToBackup = stores || Array.from(db.keys());
+  
+  storesToBackup.forEach((storeName: string) => {
+    if (db.has(storeName)) {
+      backup[storeName] = Array.from(db.get(storeName)!.values());
+    }
+  });
+
+  const savedMetadata = await backupManager.saveBackup(dbName, backup, type);
+  
+  return c.json({
+    success: true,
+    backupId: savedMetadata.id,
+    metadata: savedMetadata,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// POST - Restaurar backup desde archivo
+backupRoute.post('/backup/:backupId/restore', async (c) => {
+  const { backupId } = c.req.param();
+  const body = await c.req.json();
+  const { 
+    overwrite = false, 
+    mergeStrategy = 'newer',
+    targetDbName = null 
+  } = body;
+ 
+  // Cargar backup desde archivo
+  const backupData = await backupManager.loadBackup(backupId);
+  
+  if (!backupData) {
+    return c.json({ error: 'Backup not found' }, 404);
+  }
+
+  const dbName = targetDbName || backupData.metadata.database;
+  const backup = backupData.backup;
  
   // Si overwrite es true, limpiar la DB primero
   if (overwrite && databases.has(dbName)) {
@@ -73,11 +126,9 @@ backupRoute.post('/backup/:dbName/restore', async (c) => {
         const existing = store.get(id);
         
         if (!existing) {
-          // Nuevo registro
           store.set(id, item);
           totalRestored++;
         } else {
-          // Registro existente - aplicar estrategia de merge
           if (mergeStrategy === 'newer') {
             const existingDate = new Date(existing.updated_at || existing.created_at || 0);
             const itemDate = new Date(item.updated_at || item.created_at || 0);
@@ -92,7 +143,6 @@ backupRoute.post('/backup/:dbName/restore', async (c) => {
             store.set(id, item);
             totalUpdated++;
           } else {
-            // 'skip' - no hacer nada
             totalSkipped++;
           }
         }
@@ -102,6 +152,7 @@ backupRoute.post('/backup/:dbName/restore', async (c) => {
  
   return c.json({
     success: true,
+    backupId,
     database: dbName,
     restored: totalRestored,
     updated: totalUpdated,
@@ -111,38 +162,12 @@ backupRoute.post('/backup/:dbName/restore', async (c) => {
   });
 });
 
-// GET - Listar todos los backups disponibles
-backupRoute.get('/backup', (c) => {
-  const backups = Array.from(databases.keys()).map(dbName => {
-    const db = databases.get(dbName)!;
-    const stores: Record<string, { count: number, oldest?: string, newest?: string }> = {};
-   
-    db.forEach((store, storeName) => {
-      const items = Array.from(store.values());
-      const oldest = items.reduce((old, item) => {
-        const itemDate = new Date(item.created_at || 0);
-        return !old || itemDate < new Date(old) ? item.created_at : old;
-      }, null as string | null);
-      
-      const newest = items.reduce((newItem, item) => {
-        const itemDate = new Date(item.created_at || 0);
-        return !newItem || itemDate > new Date(newItem) ? item.created_at : newItem;
-      }, null as string | null);
-      
-      stores[storeName] = {
-        count: store.size,
-        oldest: oldest || undefined,
-        newest: newest || undefined
-      };
-    });
-   
-    return {
-      database: dbName,
-      stores,
-      totalRecords: Object.values(stores).reduce((sum, store) => sum + store.count, 0)
-    };
-  });
- 
+// GET - Listar todos los backups guardados
+backupRoute.get('/backup', async (c) => {
+  const { database } = c.req.query();
+  
+  const backups = await backupManager.listBackups(database);
+  
   return c.json({
     backups,
     count: backups.length,
@@ -150,22 +175,60 @@ backupRoute.get('/backup', (c) => {
   });
 });
 
-// DELETE - Eliminar una base de datos
-backupRoute.delete('/backup/:dbName', (c) => {
-  const { dbName } = c.req.param();
- 
-  const deleted = databases.delete(dbName);
- 
+// GET - Obtener información detallada de un backup
+backupRoute.get('/backup/:backupId/info', async (c) => {
+  const { backupId } = c.req.param();
+  
+  const backupData = await backupManager.loadBackup(backupId);
+  
+  if (!backupData) {
+    return c.json({ error: 'Backup not found' }, 404);
+  }
+  
   return c.json({
-    success: deleted,
-    database: dbName,
+    metadata: backupData.metadata,
+    storeDetails: Object.entries(backupData.backup).map(([storeName, items]) => ({
+      name: storeName,
+      count: items.length,
+      sampleData: items.slice(0, 3) // Mostrar algunos registros de ejemplo
+    })),
     timestamp: new Date().toISOString()
   });
 });
 
-// GET - Backup incremental (solo cambios después de una fecha)
-backupRoute.get('/backup/:dbName/incremental/:since', (c) => {
+// DELETE - Eliminar un backup guardado
+backupRoute.delete('/backup/:backupId', async (c) => {
+  const { backupId } = c.req.param();
+ 
+  const deleted = await backupManager.deleteBackup(backupId);
+ 
+  return c.json({
+    success: deleted,
+    backupId,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// DELETE - Limpiar backups antiguos
+backupRoute.delete('/backup/:dbName/cleanup', async (c) => {
+  const { dbName } = c.req.param();
+  const { keepLast = '5' } = c.req.query();
+  
+  const deleted = await backupManager.deleteOldBackups(dbName, parseInt(keepLast));
+  
+  return c.json({
+    success: true,
+    database: dbName,
+    deleted,
+    kept: parseInt(keepLast),
+    timestamp: new Date().toISOString()
+  });
+});
+
+// GET - Backup incremental y guardarlo
+backupRoute.get('/backup/:dbName/incremental/:since', async (c) => {
   const { dbName, since } = c.req.param();
+  const { autoSave = 'true' } = c.req.query();
   
   if (!databases.has(dbName)) {
     return c.json({ error: 'Database not found' }, 404);
@@ -185,6 +248,12 @@ backupRoute.get('/backup/:dbName/incremental/:since', (c) => {
       backup[storeName] = items;
     }
   });
+
+  // Guardar backup incremental
+  let savedMetadata = null;
+  if (autoSave === 'true') {
+    savedMetadata = await backupManager.saveBackup(dbName, backup, 'incremental', since);
+  }
   
   return c.json({
     database: dbName,
@@ -193,18 +262,27 @@ backupRoute.get('/backup/:dbName/incremental/:since', (c) => {
     since,
     timestamp: new Date().toISOString(),
     stores: Object.keys(backup),
-    totalRecords: Object.values(backup).reduce((sum, arr) => sum + arr.length, 0)
+    totalRecords: Object.values(backup).reduce((sum, arr) => sum + arr.length, 0),
+    saved: autoSave === 'true',
+    backupId: savedMetadata?.id
   });
 });
 
 // POST - Comparar backup con estado actual
-backupRoute.post('/backup/:dbName/compare', async (c) => {
-  const { dbName } = c.req.param();
-  const body = await c.req.json();
-  const { backup } = body;
+backupRoute.post('/backup/:backupId/compare', async (c) => {
+  const { backupId } = c.req.param();
+  
+  const backupData = await backupManager.loadBackup(backupId);
+  
+  if (!backupData) {
+    return c.json({ error: 'Backup not found' }, 404);
+  }
+
+  const dbName = backupData.metadata.database;
+  const backup = backupData.backup;
   
   if (!databases.has(dbName)) {
-    return c.json({ error: 'Database not found' }, 404);
+    return c.json({ error: 'Database not found in memory' }, 404);
   }
   
   const db = databases.get(dbName)!;
@@ -215,7 +293,6 @@ backupRoute.post('/backup/:dbName/compare', async (c) => {
     same: number;
   }> = {};
   
-  // Comparar cada store
   Object.entries(backup).forEach(([storeName, items]) => {
     const store = db.get(storeName);
     const stats = {
@@ -246,7 +323,6 @@ backupRoute.post('/backup/:dbName/compare', async (c) => {
         }
       });
       
-      // Contar items que solo están en current
       store.forEach((value, key) => {
         const inBackup = (items as any[]).some(item => 
           (item.id || item.dni || item.ticketID) === key
@@ -261,8 +337,65 @@ backupRoute.post('/backup/:dbName/compare', async (c) => {
   });
   
   return c.json({
+    backupId,
     database: dbName,
     comparison,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// GET - Estadísticas de backups
+backupRoute.get('/backup/stats', async (c) => {
+  const { database } = c.req.query();
+  
+  const stats = await backupManager.getBackupStats(database);
+  
+  return c.json({
+    ...stats,
+    totalSizeFormatted: `${(stats.totalSize / 1024 / 1024).toFixed(2)} MB`,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// POST - Exportar backup a una ruta específica
+backupRoute.post('/backup/:backupId/export', async (c) => {
+  const { backupId } = c.req.param();
+  const body = await c.req.json();
+  const { exportPath } = body;
+  
+  if (!exportPath) {
+    return c.json({ error: 'Export path is required' }, 400);
+  }
+  
+  const success = await backupManager.exportBackup(backupId, exportPath);
+  
+  return c.json({
+    success,
+    backupId,
+    exportPath,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// POST - Importar backup desde archivo externo
+backupRoute.post('/backup/import', async (c) => {
+  const body = await c.req.json();
+  const { importPath, targetDbName = null } = body;
+  
+  if (!importPath) {
+    return c.json({ error: 'Import path is required' }, 400);
+  }
+  
+  const metadata = await backupManager.importBackup(importPath, targetDbName);
+  
+  if (!metadata) {
+    return c.json({ error: 'Failed to import backup' }, 500);
+  }
+  
+  return c.json({
+    success: true,
+    backupId: metadata.id,
+    metadata,
     timestamp: new Date().toISOString()
   });
 });
