@@ -11,7 +11,7 @@ Sistema de sincronización de stock en tiempo real usando WebSockets con Hono + 
 - [Arquitectura](#-arquitectura)
 - [WebSocket API](#-websocket-api)
 - [REST API](#-rest-api)
-- [Base de Datos](#-base-de-datos)
+- [Sistema de Persistencia](#-sistema-de-persistencia)
 - [Validación y Seguridad](#-validación-y-seguridad)
 - [Ejemplos de Uso](#-ejemplos-de-uso)
 - [Configuración Avanzada](#-configuración-avanzada)
@@ -64,13 +64,13 @@ bun run build
 
 ### Gestión de Datos
 - ✅ **Persistencia JSON** con timestamps automáticos
-- ✅ **Backup y Restauración** completos o incrementales
-- ✅ **Sincronización diferencial** (solo cambios desde fecha)
+- ✅ **Backup y Restauración** completos
+- ✅ **Operaciones CRUD** sobre datos sincronizados
 
 ### Administración
 - ✅ **Identificación de clientes** con IDs únicos
 - ✅ **Limpieza automática** de conexiones muertas
-- ✅ **Estadísticas en tiempo real** de conexiones y datos
+- ✅ **Estadísticas en tiempo real** de conexiones
 
 ---
 
@@ -86,18 +86,37 @@ bun run build
 │   ├── websocket/
 │   │   ├── stockManager.ts         # Manager de WebSocket
 │   │   └── stockRouter.ts          # API REST para stock
-│   ├── modulos/
-│   │   └── DefaultDB.ts            # Sistema de persistencia
 │   └── routes/
 │       ├── backupRoute.ts          # Endpoints de backup
 │       └── syncRoute.ts            # Endpoints de sincronización
-├── DefaultDB.json                  # Base de datos (auto-generado)
+├── PointSales.json                 # Base de datos (auto-generado)
 ├── package.json
 ├── tsconfig.json
 └── README.md
 ```
 
-### Flujo de Datos
+### Arquitectura de Datos
+
+```
+Archivo JSON (Database)
+    │
+    ├── storeName1 (key)
+    │   ├── data: [...]              # Tus datos
+    │   ├── created_at: "..."        # Timestamp de creación
+    │   └── updated_at: "..."        # Timestamp de actualización
+    │
+    ├── storeName2 (key)
+    │   ├── data: [...]
+    │   ├── created_at: "..."
+    │   └── updated_at: "..."
+    │
+    └── storeName3 (key)
+        └── { id: data, ... }        # O estructura de objeto con IDs
+```
+
+**⚠️ IMPORTANTE:** Cada "database" es un archivo JSON. Los "stores" son keys dentro de ese archivo.
+
+### Flujo de Datos WebSocket
 
 ```
 Cliente A                    Servidor                     Cliente B
@@ -255,40 +274,118 @@ GET /api/stock/status
 
 ---
 
-## 💾 Base de Datos
+## 💾 Sistema de Persistencia
 
-### Sistema de Persistencia
+### Configuración de Databases
 
-El sistema utiliza `json-obj-manager` para persistencia en archivos JSON con timestamps automáticos.
+```typescript
+// src/routes/syncRoute.ts
+import { DataStorage } from 'json-obj-manager';
+import { JSONFileAdapter } from 'json-obj-manager/node';
+import path from "path";
 
-#### Estructura de Datos
+const PointSalesPath = path.join(process.cwd(), "./PointSales.json");
+
+const Databases = {
+  PointSales: new DataStorage<TimestampedData>(
+    new JSONFileAdapter(PointSalesPath)
+  ),
+};
+```
+
+### Agregar Más Databases
+
+```typescript
+const PointSalesPath = path.join(process.cwd(), "./PointSales.json");
+const InventoryPath = path.join(process.cwd(), "./Inventory.json");
+const CustomersPath = path.join(process.cwd(), "./Customers.json");
+
+const Databases = {
+  PointSales: new DataStorage<TimestampedData>(
+    new JSONFileAdapter(PointSalesPath)
+  ),
+  Inventory: new DataStorage<TimestampedData>(
+    new JSONFileAdapter(InventoryPath)
+  ),
+  Customers: new DataStorage<TimestampedData>(
+    new JSONFileAdapter(CustomersPath)
+  ),
+};
+```
+
+### Estructura de Datos
 
 ```typescript
 interface TimestampedData {
-  id: string;
   created_at: string;    // ISO 8601
   updated_at: string;    // ISO 8601
   [key: string]: any;    // Datos personalizados
 }
 ```
 
-### Endpoints de Sincronización
+### Ejemplo de Archivo JSON Generado
 
-#### Obtener Todos los Registros
+```json
+{
+  "products": {
+    "data": [
+      { "id": 1, "name": "Producto A", "price": 100, "stock": 50 },
+      { "id": 2, "name": "Producto B", "price": 200, "stock": 30 }
+    ],
+    "created_at": "2025-10-09T10:00:00.000Z",
+    "updated_at": "2025-10-09T10:30:00.000Z"
+  },
+  "customers": {
+    "1": {
+      "name": "Cliente A",
+      "email": "clientea@example.com",
+      "created_at": "2025-10-09T09:00:00.000Z",
+      "updated_at": "2025-10-09T09:00:00.000Z"
+    },
+    "2": {
+      "name": "Cliente B",
+      "email": "clienteb@example.com",
+      "created_at": "2025-10-09T09:15:00.000Z",
+      "updated_at": "2025-10-09T10:00:00.000Z"
+    }
+  }
+}
+```
+
+---
+
+## 🔄 API de Sincronización
+
+### ✅ Endpoints Funcionales
+
+#### 1. Obtener Datos de un Store
 ```http
 GET /api/sync/:dbName/:storeName
+```
+
+**Ejemplo:**
+```bash
+curl http://localhost:3000/api/sync/PointSales/products
 ```
 
 **Respuesta:**
 ```json
 {
-  "data": [...],
-  "count": 150,
-  "timestamp": "2025-10-09T10:30:00.000Z"
+  "data": {
+    "data": [
+      { "id": 1, "name": "Producto A", "price": 100 }
+    ],
+    "created_at": "2025-10-09T10:00:00.000Z",
+    "updated_at": "2025-10-09T10:30:00.000Z"
+  },
+  "count": 1,
+  "timestamp": "2025-10-09T10:35:00.000Z"
 }
 ```
 
-#### Sincronizar Múltiples Registros (Bulk)
+---
+
+#### 2. Sincronizar Datos (Bulk)
 ```http
 POST /api/sync/:dbName/:storeName
 Content-Type: application/json
@@ -301,18 +398,34 @@ Content-Type: application/json
 }
 ```
 
+**⚠️ IMPORTANTE:** Este endpoint **REEMPLAZA** completamente los datos existentes en el store.
+
 **Respuesta:**
 ```json
 {
   "success": true,
   "synced": 2,
-  "created": 1,
-  "updated": 1,
+  "created": 2,
+  "updated": 0,
   "timestamp": "2025-10-09T10:30:00.000Z"
 }
 ```
 
-#### Actualizar/Crear Registro Individual
+**Ejemplo con cURL:**
+```bash
+curl -X POST http://localhost:3000/api/sync/PointSales/products \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": [
+      {"id": 1, "name": "Producto A", "price": 100},
+      {"id": 2, "name": "Producto B", "price": 200}
+    ]
+  }'
+```
+
+---
+
+#### 3. Actualizar/Crear Item Individual
 ```http
 PUT /api/sync/:dbName/:storeName/:id
 Content-Type: application/json
@@ -323,47 +436,59 @@ Content-Type: application/json
 }
 ```
 
-#### Actualizar Parcialmente
-```http
-PATCH /api/sync/:dbName/:storeName/:id
-Content-Type: application/json
+**Nota:** Asume que el store contiene un objeto donde las keys son IDs.
 
+**Respuesta:**
+```json
 {
-  "price": 175
+  "success": true,
+  "action": "created",
+  "data": {
+    "name": "Producto Actualizado",
+    "price": 150,
+    "created_at": "2025-10-09T10:30:00.000Z",
+    "updated_at": "2025-10-09T10:30:00.000Z"
+  },
+  "timestamp": "2025-10-09T10:30:00.000Z"
 }
 ```
 
-#### Eliminar Registro
+**Ejemplo con cURL:**
+```bash
+curl -X PUT http://localhost:3000/api/sync/PointSales/products/1 \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Producto A Modificado", "price": 150}'
+```
+
+---
+
+### ⚠️ Endpoints con Limitaciones
+
+Los siguientes endpoints están implementados pero pueden tener errores en ciertos escenarios:
+
+#### PATCH - Actualizar Parcialmente
+```http
+PATCH /api/sync/:dbName/:storeName/:id
+```
+**Estado:** ⚠️ Funcional pero requiere que el store y el item existan previamente.
+
+#### DELETE - Eliminar Item
 ```http
 DELETE /api/sync/:dbName/:storeName/:id
 ```
+**Estado:** ⚠️ Funcional pero requiere que el store y el item existan previamente.
 
 #### Cambios Desde Fecha
 ```http
 GET /api/sync/:dbName/:storeName/since/:timestamp
 ```
-
-**Ejemplo:**
-```http
-GET /api/sync/DefautlDB/products/since/2025-10-08T00:00:00.000Z
-```
+**Estado:** ⚠️ Funcional pero asume estructura específica de datos.
 
 #### Estadísticas del Store
 ```http
 GET /api/sync/:dbName/:storeName/stats
 ```
-
-**Respuesta:**
-```json
-{
-  "total": 150,
-  "updatedLast24h": 25,
-  "updatedLast7d": 80,
-  "oldestRecord": "2025-01-01T00:00:00.000Z",
-  "newestRecord": "2025-10-09T10:30:00.000Z",
-  "timestamp": "2025-10-09T10:30:00.000Z"
-}
-```
+**Estado:** ⚠️ Funcional pero asume estructura específica de datos.
 
 ---
 
@@ -374,32 +499,31 @@ GET /api/sync/:dbName/:storeName/stats
 GET /api/backup/:dbName
 ```
 
+**Ejemplo:**
+```bash
+curl http://localhost:3000/api/backup/PointSales > backup.json
+```
+
 **Respuesta:**
 ```json
 {
-  "database": "DefautlDB",
+  "database": "PointSales",
   "backup": {
-    "products": [...],
-    "customers": [...]
+    "products": {
+      "data": [...],
+      "created_at": "...",
+      "updated_at": "..."
+    },
+    "customers": {...}
   },
   "timestamp": "2025-10-09T10:30:00.000Z",
   "stores": ["products", "customers"],
-  "totalRecords": 300,
+  "totalRecords": 2,
   "metadata": {
     "version": "1.0",
     "created_at": "2025-10-09T10:30:00.000Z"
   }
 }
-```
-
-### Backup Incremental
-```http
-GET /api/backup/:dbName/incremental/:since
-```
-
-**Ejemplo:**
-```http
-GET /api/backup/DefautlDB/incremental/2025-10-08T00:00:00.000Z
 ```
 
 ### Restaurar Backup
@@ -409,8 +533,8 @@ Content-Type: application/json
 
 {
   "backup": {
-    "products": [...],
-    "customers": [...]
+    "products": {...},
+    "customers": {...}
   },
   "overwrite": false,
   "mergeStrategy": "newer"
@@ -422,55 +546,11 @@ Content-Type: application/json
 - `force`: Sobrescribir siempre con el backup
 - `skip`: No sobrescribir registros existentes
 
-**Respuesta:**
-```json
-{
-  "success": true,
-  "database": "DefautlDB",
-  "restored": 50,
-  "updated": 30,
-  "skipped": 20,
-  "stores": ["products", "customers"],
-  "timestamp": "2025-10-09T10:30:00.000Z"
-}
-```
-
-### Listar Backups Disponibles
-```http
-GET /api/backup
-```
-
-### Comparar Backup con Estado Actual
-```http
-POST /api/backup/:dbName/compare
-Content-Type: application/json
-
-{
-  "backup": {
-    "products": [...]
-  }
-}
-```
-
-**Respuesta:**
-```json
-{
-  "database": "DefautlDB",
-  "comparison": {
-    "products": {
-      "onlyInBackup": 10,
-      "onlyInCurrent": 5,
-      "different": 8,
-      "same": 127
-    }
-  },
-  "timestamp": "2025-10-09T10:30:00.000Z"
-}
-```
-
-### Eliminar Base de Datos
-```http
-DELETE /api/backup/:dbName
+**Ejemplo:**
+```bash
+curl -X POST http://localhost:3000/api/backup/PointSales/restore \
+  -H "Content-Type: application/json" \
+  -d @backup.json
 ```
 
 ---
@@ -504,7 +584,7 @@ stockWsManager.setValidator(async (event, data) => {
     
     for (const sub of subtractions) {
       // Verificar stock actual
-      const product = await db.get(sub.productId.toString());
+      const product = await db.load(`products.${sub.productId}`);
       
       if (!product) {
         return { 
@@ -528,8 +608,6 @@ stockWsManager.setValidator(async (event, data) => {
 
 ### Respuestas de Error
 
-Cuando una validación falla, el cliente recibe:
-
 ```json
 {
   "event": "stock:error",
@@ -547,7 +625,7 @@ Cuando una validación falla, el cliente recibe:
 
 ## 📖 Ejemplos de Uso
 
-### Cliente Web Completo
+### Cliente JavaScript Completo
 
 ```javascript
 class StockManager {
@@ -559,7 +637,6 @@ class StockManager {
   setupListeners() {
     this.ws.onopen = () => {
       console.log('✅ Conectado al servidor de stock');
-      this.subscribeToUpdates();
     };
     
     this.ws.onmessage = (event) => {
@@ -622,7 +699,7 @@ class StockManager {
     }));
   }
   
-  // Métodos de UI (implementar según framework)
+  // Métodos de UI
   updateStockInUI(data) {
     data.forEach(({ productId, stock }) => {
       const element = document.querySelector(`[data-product="${productId}"]`);
@@ -633,35 +710,9 @@ class StockManager {
     });
   }
   
-  incrementStockInUI(data) {
-    data.forEach(({ productId, quantity }) => {
-      const element = document.querySelector(`[data-product="${productId}"]`);
-      if (element) {
-        const current = parseInt(element.textContent) || 0;
-        element.textContent = current + quantity;
-      }
-    });
-  }
-  
-  decrementStockInUI(data) {
-    data.forEach(({ productId, quantity }) => {
-      const element = document.querySelector(`[data-product="${productId}"]`);
-      if (element) {
-        const current = parseInt(element.textContent) || 0;
-        element.textContent = Math.max(0, current - quantity);
-      }
-    });
-  }
-  
-  syncAllStockInUI(data) {
-    data.forEach(({ productId, stock }) => {
-      this.updateStockInUI([{ productId, stock }]);
-    });
-  }
-  
   showError(error) {
     console.error(`Error de stock: ${error.reason}`);
-    // Mostrar notificación al usuario
+    alert(`Error: ${error.reason}`);
   }
   
   reconnect() {
@@ -681,27 +732,93 @@ document.querySelector('#update-btn').addEventListener('click', () => {
 });
 ```
 
+### Sincronización Completa con REST API
+
+```javascript
+// Cargar datos iniciales
+async function loadProducts() {
+  const response = await fetch('http://localhost:3000/api/sync/PointSales/products');
+  const result = await response.json();
+  
+  // Acceder a los datos
+  const productsData = result.data;
+  
+  if (productsData && productsData.data) {
+    return productsData.data; // Array de productos
+  }
+  
+  return [];
+}
+
+// Sincronizar productos (reemplaza todos)
+async function syncProducts(products) {
+  const response = await fetch('http://localhost:3000/api/sync/PointSales/products', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data: products })
+  });
+  
+  return await response.json();
+}
+
+// Actualizar un producto individual
+async function updateProduct(id, productData) {
+  const response = await fetch(`http://localhost:3000/api/sync/PointSales/products/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(productData)
+  });
+  
+  return await response.json();
+}
+
+// Uso
+const products = await loadProducts();
+console.log('Productos cargados:', products);
+
+// Sincronizar cambios
+await syncProducts([
+  { id: 1, name: "Producto A", price: 100, stock: 50 },
+  { id: 2, name: "Producto B", price: 200, stock: 30 }
+]);
+
+// Actualizar un producto
+await updateProduct(1, {
+  name: "Producto A Actualizado",
+  price: 120,
+  stock: 45
+});
+```
+
 ### Testing con cURL
 
 ```bash
-# Actualizar stock
-curl -X POST http://localhost:3000/api/stock/update \
-  -H "Content-Type: application/json" \
-  -d '{"updates":[{"productId":1,"stock":100}]}'
+# Ver todos los productos
+curl http://localhost:3000/api/sync/PointSales/products
 
-# Añadir stock
-curl -X POST http://localhost:3000/api/stock/add \
+# Sincronizar productos
+curl -X POST http://localhost:3000/api/sync/PointSales/products \
   -H "Content-Type: application/json" \
-  -d '{"additions":[{"productId":1,"quantity":50}]}'
+  -d '{
+    "data": [
+      {"id": 1, "name": "Producto A", "price": 100},
+      {"id": 2, "name": "Producto B", "price": 200}
+    ]
+  }'
 
-# Ver estado
+# Actualizar producto individual
+curl -X PUT http://localhost:3000/api/sync/PointSales/products/1 \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Producto A Modificado", "price": 150}'
+
+# Estado del servidor WebSocket
 curl http://localhost:3000/api/stock/status
 
 # Hacer backup
-curl http://localhost:3000/api/backup/DefautlDB > backup.json
+curl http://localhost:3000/api/backup/PointSales > backup.json
 
 # Restaurar backup
-curl -X POST http://localhost:3000/api/backup/DefautlDB/restore \
+curl -X POST http://localhost:3000/api/backup/PointSales/restore \
   -H "Content-Type: application/json" \
   -d @backup.json
 ```
@@ -714,6 +831,8 @@ curl -X POST http://localhost:3000/api/backup/DefautlDB/restore \
 
 ```typescript
 // src/index.ts
+import { cors } from 'hono/cors';
+
 app.use('*', cors({
   origin: [
     'http://localhost:3000',
@@ -732,12 +851,12 @@ app.use('*', cors({
 ```bash
 # .env
 PORT=3000
-DB_PATH=./DefaultDB.json
+DB_PATH=./PointSales.json
 WS_PATH=/ws
 CORS_ORIGINS=http://localhost:3000,http://localhost:4321
 ```
 
-### Rate Limiting (Recomendado)
+### Rate Limiting (Recomendado para Producción)
 
 ```typescript
 import { rateLimiter } from 'hono-rate-limiter';
@@ -750,20 +869,20 @@ app.use('/api/*', rateLimiter({
 }));
 ```
 
-### Autenticación (Ejemplo con JWT)
+### Autenticación con JWT (Ejemplo)
 
 ```typescript
 import { jwt } from 'hono/jwt';
 
+// Proteger endpoints REST
 app.use('/api/*', jwt({
   secret: process.env.JWT_SECRET || 'tu-secreto'
 }));
 
-// En el WebSocket
+// Validar token en WebSocket
 app.get('/ws', upgradeWebSocket(() => {
   return {
     onOpen(evt, ws) {
-      // Validar token desde query params
       const url = new URL(evt.request.url);
       const token = url.searchParams.get('token');
       
@@ -782,26 +901,17 @@ app.get('/ws', upgradeWebSocket(() => {
 
 ## 📝 Notas Importantes
 
-### ⚠️ Consideraciones de Producción
+### ⚠️ Arquitectura de Datos
 
-- **Rate Limiting**: No implementado por defecto, añadir para producción
-- **Autenticación**: No implementada por defecto, añadir según necesidad
-- **Validación de Negocio**: El validador es opcional pero **altamente recomendado**
-- **Monitoreo**: Implementar logging y métricas para producción
-- **Escalabilidad**: Para múltiples instancias, considerar Redis pub/sub
+- **Una Database = Un Archivo JSON**: Cada entrada en `Databases` apunta a un archivo diferente
+- **Stores = Keys en JSON**: Los "stores" no son colecciones separadas, son keys dentro del archivo
+- **POST Reemplaza Todo**: El endpoint POST de sincronización reemplaza completamente los datos existentes
+- **Timestamps Automáticos**: Todos los datos incluyen `created_at` y `updated_at`
 
 ### 🔒 Seguridad
 
-- Los mensajes se propagan **excepto al emisor** (prevención de echo)
+- Los mensajes WebSocket se propagan **excepto al emisor** (prevención de echo)
 - Las conexiones muertas se limpian automáticamente
 - Validación multinivel antes de propagar cambios
-- CORS configurado para orígenes específicos
-
-### 🚀 Performance
-
-- **Sin persistencia en memoria**: Todos los datos se guardan en archivo JSON
-- **Timestamps automáticos**: `created_at` y `updated_at` gestionados automáticamente
-- **Sincronización incremental**: Soporta sync desde fecha específica
-- **Bulk operations**: Operaciones masivas optimizadas
-
----
+- CORS configurable para orígenes específicos
+- **⚠️ Sin autenticación por defecto**: Implementar JWT o similar para producción
