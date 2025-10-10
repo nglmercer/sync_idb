@@ -28,8 +28,8 @@ Sistema de sincronización de stock en tiempo real usando WebSockets con Hono + 
 
 ```bash
 # Clonar el repositorio
-git clone <tu-repo>
-cd stock-websocket-system
+git clone https://github.com/nglmercer/sync_idb
+cd sync_idb
 
 # Instalar dependencias
 bun install
