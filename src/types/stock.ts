@@ -22,7 +22,7 @@ export type StockEventType =
   | 'stock:add'
   | 'stock:subtract'
   | 'stock:sync'
-  | 'stock:error';
+  | 'sync:change';
 
 export interface StockMessage<T = unknown> {
   event: StockEventType;
@@ -53,7 +53,7 @@ export interface IncomingStockMessage {
 // Callback para validación de stock
 export type StockValidator = (
   event: StockEventType,
-  data: StockUpdate[] | StockAddition[] | StockSubtraction[]
+  data: StockUpdate[] | StockAddition[] | StockSubtraction[] | unknown[]
 ) => Promise<{
   valid: boolean;
   error?: string;

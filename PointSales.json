@@ -8,7 +8,12 @@
         "image": "/images/quarter-pounder-cheese.svg",
         "fallback": "🍔",
         "category": "burgers",
-        "stock": 15
+        "stock": 15,
+        "updated_at": "2025-10-10T22:57:27.657Z",
+        "synced_at": "2025-10-10T22:57:27.657Z",
+        "client_id": "unknown",
+        "created_at": "2025-10-10T22:33:40.997Z",
+        "version": 232
       },
       {
         "id": 2,
@@ -17,7 +22,12 @@
         "image": "/images/double-quarter-pounder.jpg",
         "fallback": "🍔",
         "category": "burgers",
-        "stock": 8
+        "stock": 8,
+        "updated_at": "2025-10-10T22:57:27.657Z",
+        "synced_at": "2025-10-10T22:57:27.657Z",
+        "client_id": "unknown",
+        "created_at": "2025-10-10T22:33:40.997Z",
+        "version": 232
       },
       {
         "id": 3,
@@ -26,7 +36,12 @@
         "image": "/images/quarter-pounder-deluxe.jpg",
         "fallback": "🍔",
         "category": "burgers",
-        "stock": 0
+        "stock": 0,
+        "updated_at": "2025-10-10T22:57:27.657Z",
+        "synced_at": "2025-10-10T22:57:27.657Z",
+        "client_id": "unknown",
+        "created_at": "2025-10-10T22:33:40.997Z",
+        "version": 232
       },
       {
         "id": 4,
@@ -35,7 +50,12 @@
         "image": "/images/big-mac.jpg",
         "fallback": "🍔",
         "category": "burgers",
-        "stock": 20
+        "stock": 20,
+        "updated_at": "2025-10-10T22:57:27.657Z",
+        "synced_at": "2025-10-10T22:57:27.657Z",
+        "client_id": "unknown",
+        "created_at": "2025-10-10T22:33:40.997Z",
+        "version": 232
       },
       {
         "id": 5,
@@ -43,7 +63,12 @@
         "price": 1.99,
         "image": "/images/mcdouble.jpg",
         "fallback": "🍔",
-        "category": "burgers"
+        "category": "burgers",
+        "updated_at": "2025-10-10T22:57:27.657Z",
+        "synced_at": "2025-10-10T22:57:27.657Z",
+        "client_id": "unknown",
+        "created_at": "2025-10-10T22:33:40.997Z",
+        "version": 232
       },
       {
         "id": 6,
@@ -52,7 +77,12 @@
         "image": "/images/quarter-pounder-bacon.jpg",
         "fallback": "🍔",
         "category": "burgers",
-        "stock": 5
+        "stock": 5,
+        "updated_at": "2025-10-10T22:57:27.657Z",
+        "synced_at": "2025-10-10T22:57:27.657Z",
+        "client_id": "unknown",
+        "created_at": "2025-10-10T22:33:40.997Z",
+        "version": 232
       },
       {
         "id": 7,
@@ -61,7 +91,12 @@
         "image": "/images/chicken-sandwich.jpg",
         "fallback": "🥪",
         "category": "sandwiches",
-        "stock": 12
+        "stock": 12,
+        "updated_at": "2025-10-10T22:57:27.657Z",
+        "synced_at": "2025-10-10T22:57:27.657Z",
+        "client_id": "unknown",
+        "created_at": "2025-10-10T22:33:40.997Z",
+        "version": 232
       },
       {
         "id": 8,
@@ -70,7 +105,12 @@
         "image": "/images/fish-sandwich.jpg",
         "fallback": "🥪",
         "category": "sandwiches",
-        "stock": 3
+        "stock": 3,
+        "updated_at": "2025-10-10T22:57:27.657Z",
+        "synced_at": "2025-10-10T22:57:27.657Z",
+        "client_id": "unknown",
+        "created_at": "2025-10-10T22:33:40.997Z",
+        "version": 232
       },
       {
         "id": 9,
@@ -79,7 +119,12 @@
         "image": "/images/large-fries.svg",
         "fallback": "🍟",
         "category": "sides",
-        "stock": 25
+        "stock": 25,
+        "updated_at": "2025-10-10T22:57:27.657Z",
+        "synced_at": "2025-10-10T22:57:27.657Z",
+        "client_id": "unknown",
+        "created_at": "2025-10-10T22:33:40.997Z",
+        "version": 232
       },
       {
         "id": 10,
@@ -88,7 +133,12 @@
         "image": "/images/medium-fries.jpg",
         "fallback": "🍟",
         "category": "sides",
-        "stock": 18
+        "stock": 18,
+        "updated_at": "2025-10-10T22:57:27.657Z",
+        "synced_at": "2025-10-10T22:57:27.657Z",
+        "client_id": "unknown",
+        "created_at": "2025-10-10T22:33:40.997Z",
+        "version": 232
       },
       {
         "id": 11,
@@ -96,7 +146,12 @@
         "price": 1.99,
         "image": "/images/small-fries.jpg",
         "fallback": "🍟",
-        "category": "sides"
+        "category": "sides",
+        "updated_at": "2025-10-10T22:57:27.657Z",
+        "synced_at": "2025-10-10T22:57:27.657Z",
+        "client_id": "unknown",
+        "created_at": "2025-10-10T22:33:40.997Z",
+        "version": 232
       },
       {
         "id": 12,
@@ -105,38 +160,539 @@
         "image": "/images/medium-soda.svg",
         "fallback": "🥤",
         "category": "drinks",
-        "stock": 50
+        "stock": 50,
+        "updated_at": "2025-10-10T22:57:27.657Z",
+        "synced_at": "2025-10-10T22:57:27.657Z",
+        "client_id": "unknown",
+        "created_at": "2025-10-10T22:33:40.997Z",
+        "version": 232
       },
-      {
-        "id": 13,
-        "name": "Large Soda",
-        "price": 2.29,
-        "image": "/images/large-soda.jpg",
-        "fallback": "🥤",
-        "category": "drinks",
-        "stock": 30
-      },
-      {
-        "id": 14,
-        "name": "M&Ms McFlurry",
-        "price": 3.99,
-        "image": "/images/mcflurry.jpg",
-        "fallback": "🍦",
-        "category": "drinks",
-        "stock": 0
-      }
+      null,
+      null
     ],
-    "created_at": "2025-10-10T06:31:58.943Z",
-    "updated_at": "2025-10-10T06:31:58.943Z"
+    "created_at": "2025-10-10T07:18:39.111Z",
+    "updated_at": "2025-10-10T23:43:03.966Z",
+    "version": 256
   },
   "tickets": {
-    "data": [],
-    "created_at": "2025-10-10T06:31:59.010Z",
-    "updated_at": "2025-10-10T06:31:59.010Z"
+    "data": [
+      {
+        "ticketID": "MCK023872",
+        "customerData": {
+          "name": "123",
+          "dni": "123",
+          "phone": "123",
+          "address": "123",
+          "orderType": "takeout"
+        },
+        "cartItems": [
+          {
+            "id": 1,
+            "name": "Quarter Pounder With Cheese",
+            "price": 3.99,
+            "image": "/images/quarter-pounder-cheese.svg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 3
+          },
+          {
+            "id": 2,
+            "name": "Double Quarter Pounder With Cheese",
+            "price": 4.79,
+            "image": "/images/double-quarter-pounder.jpg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 4
+          }
+        ],
+        "total": 31.130000000000003,
+        "date": "28 sept 2025",
+        "time": "18:00",
+        "id": "MCK023872",
+        "updated_at": "2025-10-10T23:44:23.980Z",
+        "synced_at": "2025-10-10T23:44:23.980Z",
+        "client_id": "client_1760137196164_ssd7azvn3",
+        "created_at": "2025-10-10T22:33:41.137Z",
+        "version": 328
+      },
+      {
+        "id": "MCK122862",
+        "ticketID": "MCK122862",
+        "customerData": {
+          "name": "123",
+          "dni": "123",
+          "phone": "123",
+          "address": "",
+          "description": "123",
+          "orderType": "takeout",
+          "id": "123"
+        },
+        "cartItems": [
+          {
+            "id": 1,
+            "name": "Quarter Pounder With Cheese",
+            "price": 3.99,
+            "image": "/images/quarter-pounder-cheese.svg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 4
+          },
+          {
+            "id": 2,
+            "name": "Double Quarter Pounder With Cheese",
+            "price": 4.79,
+            "image": "/images/double-quarter-pounder.jpg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 4
+          },
+          {
+            "id": 3,
+            "name": "Quarter Pounder With Cheese Deluxe",
+            "price": 4.29,
+            "image": "/images/quarter-pounder-deluxe.jpg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 2
+          },
+          {
+            "id": 4,
+            "name": "Big Mac",
+            "price": 3.99,
+            "image": "/images/big-mac.jpg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 2
+          }
+        ],
+        "total": 51.68000000000001,
+        "date": "28 sept 2025",
+        "time": "19:58",
+        "updated_at": "2025-10-10T23:44:23.980Z",
+        "synced_at": "2025-10-10T23:44:23.980Z",
+        "client_id": "client_1760137196164_ssd7azvn3",
+        "created_at": "2025-10-10T22:33:41.137Z",
+        "version": 328
+      },
+      {
+        "ticketID": "MCK191084",
+        "customerData": {
+          "name": "123",
+          "dni": "123",
+          "phone": "123",
+          "address": "",
+          "orderType": ""
+        },
+        "cartItems": [
+          {
+            "id": 1,
+            "name": "Quarter Pounder With Cheese",
+            "price": 3.99,
+            "image": "/images/quarter-pounder-cheese.svg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 2
+          },
+          {
+            "id": 2,
+            "name": "Double Quarter Pounder With Cheese",
+            "price": 4.79,
+            "image": "/images/double-quarter-pounder.jpg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 2
+          }
+        ],
+        "total": 17.560000000000002,
+        "date": "28 sept 2025",
+        "time": "18:19",
+        "id": "MCK191084",
+        "updated_at": "2025-10-10T23:44:23.980Z",
+        "synced_at": "2025-10-10T23:44:23.980Z",
+        "client_id": "client_1760137196164_ssd7azvn3",
+        "created_at": "2025-10-10T22:33:41.137Z",
+        "version": 328
+      },
+      {
+        "id": "MCK208783",
+        "ticketID": "MCK208783",
+        "customerData": {
+          "name": "123",
+          "dni": "123",
+          "phone": "123",
+          "address": "",
+          "orderType": "takeout",
+          "description": "123",
+          "id": "123"
+        },
+        "cartItems": [
+          {
+            "id": 1,
+            "name": "Quarter Pounder With Cheese",
+            "price": 3.99,
+            "image": "/images/quarter-pounder-cheese.svg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 1
+          },
+          {
+            "id": 2,
+            "name": "Double Quarter Pounder With Cheese",
+            "price": 4.79,
+            "image": "/images/double-quarter-pounder.jpg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 1
+          },
+          {
+            "id": 3,
+            "name": "Quarter Pounder With Cheese Deluxe",
+            "price": 4.29,
+            "image": "/images/quarter-pounder-deluxe.jpg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 1
+          },
+          {
+            "id": 6,
+            "name": "Quarter Pounder With Cheese Bacon",
+            "price": 4.99,
+            "image": "/images/quarter-pounder-bacon.jpg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 1
+          },
+          {
+            "id": 5,
+            "name": "McDouble",
+            "price": 1.99,
+            "image": "/images/mcdouble.jpg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 1
+          },
+          {
+            "id": 4,
+            "name": "Big Mac",
+            "price": 3.99,
+            "image": "/images/big-mac.jpg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 1
+          }
+        ],
+        "total": 24.04,
+        "date": "28 sept 2025",
+        "time": "19:26",
+        "updated_at": "2025-10-10T23:44:23.980Z",
+        "synced_at": "2025-10-10T23:44:23.980Z",
+        "client_id": "client_1760137196164_ssd7azvn3",
+        "created_at": "2025-10-10T22:33:41.137Z",
+        "version": 328
+      },
+      {
+        "ticketID": "MCK399904",
+        "customerData": {
+          "name": "123",
+          "dni": "123",
+          "phone": "123",
+          "address": "123",
+          "orderType": "delivery"
+        },
+        "cartItems": [
+          {
+            "id": 1,
+            "name": "Quarter Pounder With Cheese",
+            "price": 3.99,
+            "image": "/images/quarter-pounder-cheese.svg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 2
+          },
+          {
+            "id": 2,
+            "name": "Double Quarter Pounder With Cheese",
+            "price": 4.79,
+            "image": "/images/double-quarter-pounder.jpg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 1
+          }
+        ],
+        "total": 12.77,
+        "date": "28 sept 2025",
+        "time": "18:23",
+        "id": "MCK399904",
+        "updated_at": "2025-10-10T23:44:23.980Z",
+        "synced_at": "2025-10-10T23:44:23.980Z",
+        "client_id": "client_1760137196164_ssd7azvn3",
+        "created_at": "2025-10-10T22:33:41.137Z",
+        "version": 328
+      },
+      {
+        "id": "MCK437361",
+        "ticketID": "MCK437361",
+        "customerData": {
+          "name": "123",
+          "dni": "123",
+          "phone": "123",
+          "address": "123",
+          "orderType": "takeout",
+          "id": "123"
+        },
+        "cartItems": [
+          {
+            "id": 1,
+            "name": "Quarter Pounder With Cheese",
+            "price": 3.99,
+            "image": "/images/quarter-pounder-cheese.svg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 2
+          },
+          {
+            "id": 2,
+            "name": "Double Quarter Pounder With Cheese",
+            "price": 4.79,
+            "image": "/images/double-quarter-pounder.jpg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 2
+          }
+        ],
+        "total": 17.560000000000002,
+        "date": "28 sept 2025",
+        "time": "18:40",
+        "updated_at": "2025-10-10T23:44:23.980Z",
+        "synced_at": "2025-10-10T23:44:23.980Z",
+        "client_id": "client_1760137196164_ssd7azvn3",
+        "created_at": "2025-10-10T22:33:41.137Z",
+        "version": 328
+      },
+      {
+        "ticketID": "MCK483820",
+        "customerData": {
+          "name": "123",
+          "dni": "123",
+          "phone": "123",
+          "address": "123",
+          "orderType": "takeout"
+        },
+        "cartItems": [
+          {
+            "id": 1,
+            "name": "Quarter Pounder With Cheese",
+            "price": 3.99,
+            "image": "/images/quarter-pounder-cheese.svg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 2
+          },
+          {
+            "id": 2,
+            "name": "Double Quarter Pounder With Cheese",
+            "price": 4.79,
+            "image": "/images/double-quarter-pounder.jpg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 1
+          }
+        ],
+        "total": 12.77,
+        "date": "28 sept 2025",
+        "time": "18:24",
+        "id": "MCK483820",
+        "updated_at": "2025-10-10T23:44:23.980Z",
+        "synced_at": "2025-10-10T23:44:23.980Z",
+        "client_id": "client_1760137196164_ssd7azvn3",
+        "created_at": "2025-10-10T22:33:41.137Z",
+        "version": 328
+      },
+      {
+        "ticketID": "MCK618630",
+        "customerData": {
+          "name": "123",
+          "dni": "123",
+          "phone": "123",
+          "address": "123",
+          "orderType": "takeout"
+        },
+        "cartItems": [
+          {
+            "id": 2,
+            "name": "Double Quarter Pounder With Cheese",
+            "price": 4.79,
+            "image": "/images/double-quarter-pounder.jpg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 2
+          },
+          {
+            "id": 3,
+            "name": "Quarter Pounder With Cheese Deluxe",
+            "price": 4.29,
+            "image": "/images/quarter-pounder-deluxe.jpg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 1
+          }
+        ],
+        "total": 13.870000000000001,
+        "date": "28 sept 2025",
+        "time": "18:10",
+        "id": "MCK618630",
+        "updated_at": "2025-10-10T23:44:23.980Z",
+        "synced_at": "2025-10-10T23:44:23.980Z",
+        "client_id": "client_1760137196164_ssd7azvn3",
+        "created_at": "2025-10-10T22:33:41.137Z",
+        "version": 328
+      },
+      {
+        "ticketID": "MCK687846",
+        "customerData": {
+          "name": "123",
+          "dni": "123",
+          "phone": "123",
+          "address": "123",
+          "orderType": "takeout"
+        },
+        "cartItems": [
+          {
+            "id": 1,
+            "name": "Quarter Pounder With Cheese",
+            "price": 3.99,
+            "image": "/images/quarter-pounder-cheese.svg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 1
+          },
+          {
+            "id": 2,
+            "name": "Double Quarter Pounder With Cheese",
+            "price": 4.79,
+            "image": "/images/double-quarter-pounder.jpg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 1
+          },
+          {
+            "id": 3,
+            "name": "Quarter Pounder With Cheese Deluxe",
+            "price": 4.29,
+            "image": "/images/quarter-pounder-deluxe.jpg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 1
+          }
+        ],
+        "total": 13.07,
+        "date": "28 sept 2025",
+        "time": "18:11",
+        "id": "MCK687846",
+        "updated_at": "2025-10-10T23:44:23.980Z",
+        "synced_at": "2025-10-10T23:44:23.980Z",
+        "client_id": "client_1760137196164_ssd7azvn3",
+        "created_at": "2025-10-10T22:33:41.137Z",
+        "version": 328
+      },
+      {
+        "ticketID": "MCK694817",
+        "customerData": {
+          "name": "123",
+          "dni": "123",
+          "phone": "123",
+          "address": "123",
+          "orderType": "takeout"
+        },
+        "cartItems": [
+          {
+            "id": 1,
+            "name": "Quarter Pounder With Cheese",
+            "price": 3.99,
+            "image": "/images/quarter-pounder-cheese.svg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 3
+          },
+          {
+            "id": 2,
+            "name": "Double Quarter Pounder With Cheese",
+            "price": 4.79,
+            "image": "/images/double-quarter-pounder.jpg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 2
+          }
+        ],
+        "total": 21.55,
+        "date": "28 sept 2025",
+        "time": "18:28",
+        "id": "MCK694817",
+        "updated_at": "2025-10-10T23:44:23.980Z",
+        "synced_at": "2025-10-10T23:44:23.980Z",
+        "client_id": "client_1760137196164_ssd7azvn3",
+        "created_at": "2025-10-10T22:33:41.137Z",
+        "version": 328
+      },
+      {
+        "ticketID": "MCK823152",
+        "customerData": {
+          "name": "123",
+          "dni": "123",
+          "phone": "123",
+          "address": "123",
+          "orderType": "takeout"
+        },
+        "cartItems": [
+          {
+            "id": 1,
+            "name": "Quarter Pounder With Cheese",
+            "price": 3.99,
+            "image": "/images/quarter-pounder-cheese.svg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 2
+          },
+          {
+            "id": 2,
+            "name": "Double Quarter Pounder With Cheese",
+            "price": 4.79,
+            "image": "/images/double-quarter-pounder.jpg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 2
+          },
+          {
+            "id": 3,
+            "name": "Quarter Pounder With Cheese Deluxe",
+            "price": 4.29,
+            "image": "/images/quarter-pounder-deluxe.jpg",
+            "fallback": "🍔",
+            "category": "burgers",
+            "quantity": 1
+          }
+        ],
+        "total": 21.85,
+        "date": "28 sept 2025",
+        "time": "18:13",
+        "id": "MCK823152",
+        "updated_at": "2025-10-10T23:44:23.980Z",
+        "synced_at": "2025-10-10T23:44:23.980Z",
+        "client_id": "client_1760137196164_ssd7azvn3",
+        "created_at": "2025-10-10T22:33:41.137Z",
+        "version": 328
+      }
+    ],
+    "created_at": "2025-10-10T07:18:39.158Z",
+    "updated_at": "2025-10-10T23:44:23.980Z",
+    "version": 328,
+    "last_sync_client": "client_1760137196164_ssd7azvn3"
   },
   "customers": {
     "data": [],
-    "created_at": "2025-10-10T06:31:59.070Z",
-    "updated_at": "2025-10-10T06:31:59.070Z"
+    "created_at": "2025-10-10T07:18:39.184Z",
+    "updated_at": "2025-10-10T23:02:03.935Z",
+    "version": 287,
+    "last_sync_client": "unknown"
   }
 }
