@@ -5,6 +5,8 @@
     "jsxImportSource": "hono/jsx",
     "moduleResolution": "bundler",  // o "node16" / "nodenext"
     "module": "ESNext",
-    "target": "ESNext"
-  }
+    "target": "ESNext",
+    "outDir": "dist" // Add outDir option
+  },
+  "exclude": ["node_modules", "build", "tests"]
 }

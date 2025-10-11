@@ -89,7 +89,8 @@ class NotificationManager {
 
     // Formato array compatible con socket.io style: [event, data]
     // Esto permite que el cliente use: ws.on('event', (...args) => {})
-    const message = [event, data];
+    const arrayData = Array.isArray(data) ? data : [data];
+    const message = { event, data:arrayData,payload:arrayData };
     const messageStr = JSON.stringify(message);
     
     let successCount = 0;
@@ -136,7 +137,8 @@ class NotificationManager {
 
     try {
       // Formato array compatible con socket.io style: [event, data]
-      const message = [event, data];
+      const arrayData = Array.isArray(data) ? data : [data];
+      const message = { event, data:arrayData,payload:arrayData };
       
       client.ws.send(JSON.stringify(message));
       console.log(`📤 Mensaje enviado a ${clientId}: ${event}`);

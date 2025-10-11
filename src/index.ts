@@ -64,7 +64,7 @@ app.onError((err, c) => {
     message: err.message
   }, 500);
 });
-
+export {app}
 export default {
   fetch: app.fetch,
   websocket

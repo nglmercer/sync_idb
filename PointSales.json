@@ -78,101 +78,403 @@
         "fallback": "🍔",
         "category": "burgers",
         "stock": 5,
-        "updated_at": "2025-10-10T22:57:27.657Z",
+        "updated_at": "2025-10-11T06:29:15.226Z",
         "synced_at": "2025-10-10T22:57:27.657Z",
-        "client_id": "unknown",
+        "client_id": "client-1760162588204-eqvlfeuhs",
         "created_at": "2025-10-10T22:33:40.997Z",
-        "version": 232
+        "version": 5,
+        "description": "",
+        "clientId": "client-1760162588819-qbq21ua3q"
       },
       {
-        "id": 7,
-        "name": "Chicken Sandwich",
-        "price": 4.49,
-        "image": "/images/chicken-sandwich.jpg",
-        "fallback": "🥪",
-        "category": "sandwiches",
-        "stock": 12,
-        "updated_at": "2025-10-10T22:57:27.657Z",
-        "synced_at": "2025-10-10T22:57:27.657Z",
-        "client_id": "unknown",
-        "created_at": "2025-10-10T22:33:40.997Z",
-        "version": 232
+        "id": "1760165594877-2098",
+        "name": "123",
+        "price": 123,
+        "category": "meals",
+        "description": "123",
+        "image": "",
+        "fallback": "",
+        "stock": null,
+        "clientId": "client-1760162588819-qbq21ua3q",
+        "version": 22,
+        "updated_at": "2025-10-11T06:53:15.071Z",
+        "created_at": "2025-10-11T06:53:15.071Z",
+        "client_id": "client-1760162588819-qbq21ua3q"
       },
       {
-        "id": 8,
-        "name": "Fish Sandwich",
-        "price": 3.79,
-        "image": "/images/fish-sandwich.jpg",
-        "fallback": "🥪",
-        "category": "sandwiches",
-        "stock": 3,
-        "updated_at": "2025-10-10T22:57:27.657Z",
-        "synced_at": "2025-10-10T22:57:27.657Z",
-        "client_id": "unknown",
-        "created_at": "2025-10-10T22:33:40.997Z",
-        "version": 232
+        "id": "1760165614543-5306",
+        "name": "Nuevo Producto",
+        "price": 123123123,
+        "category": "false",
+        "description": "123123123",
+        "image": "",
+        "fallback": "",
+        "stock": null,
+        "clientId": "client-1760162588819-qbq21ua3q",
+        "version": 24,
+        "updated_at": "2025-10-11T06:53:34.638Z",
+        "created_at": "2025-10-11T06:53:34.638Z",
+        "client_id": "client-1760162588819-qbq21ua3q"
       },
       {
-        "id": 9,
-        "name": "Large Fries",
-        "price": 2.99,
-        "image": "/images/large-fries.svg",
-        "fallback": "🍟",
-        "category": "sides",
-        "stock": 25,
-        "updated_at": "2025-10-10T22:57:27.657Z",
-        "synced_at": "2025-10-10T22:57:27.657Z",
-        "client_id": "unknown",
-        "created_at": "2025-10-10T22:33:40.997Z",
-        "version": 232
+        "stock": 10,
+        "clientId": "client-pos",
+        "created_at": "2025-10-11T07:01:59.001Z",
+        "updated_at": "2025-10-11T07:01:59.001Z",
+        "version": 26,
+        "client_id": "client-pos"
       },
       {
-        "id": 10,
-        "name": "Medium Fries",
-        "price": 2.49,
-        "image": "/images/medium-fries.jpg",
-        "fallback": "🍟",
-        "category": "sides",
-        "stock": 18,
-        "updated_at": "2025-10-10T22:57:27.657Z",
-        "synced_at": "2025-10-10T22:57:27.657Z",
-        "client_id": "unknown",
-        "created_at": "2025-10-10T22:33:40.997Z",
-        "version": 232
+        "stock": 10,
+        "clientId": "client-pos",
+        "created_at": "2025-10-11T07:04:59.643Z",
+        "updated_at": "2025-10-11T07:04:59.643Z",
+        "version": 26,
+        "client_id": "client-pos"
       },
       {
-        "id": 11,
-        "name": "Small Fries",
-        "price": 1.99,
-        "image": "/images/small-fries.jpg",
-        "fallback": "🍟",
-        "category": "sides",
-        "updated_at": "2025-10-10T22:57:27.657Z",
-        "synced_at": "2025-10-10T22:57:27.657Z",
-        "client_id": "unknown",
-        "created_at": "2025-10-10T22:33:40.997Z",
-        "version": 232
+        "stock": 10,
+        "clientId": "client-pos",
+        "created_at": "2025-10-11T07:05:20.865Z",
+        "updated_at": "2025-10-11T07:05:20.865Z",
+        "version": 27,
+        "client_id": "client-pos"
       },
       {
-        "id": 12,
-        "name": "Medium Soda",
-        "price": 1.99,
-        "image": "/images/medium-soda.svg",
-        "fallback": "🥤",
-        "category": "drinks",
-        "stock": 50,
-        "updated_at": "2025-10-10T22:57:27.657Z",
-        "synced_at": "2025-10-10T22:57:27.657Z",
-        "client_id": "unknown",
-        "created_at": "2025-10-10T22:33:40.997Z",
-        "version": 232
+        "stock": 10,
+        "clientId": "client-pos",
+        "created_at": "2025-10-11T07:06:17.097Z",
+        "updated_at": "2025-10-11T07:06:17.097Z",
+        "version": 28,
+        "client_id": "client-pos"
       },
-      null,
-      null
+      {
+        "stock": 10,
+        "clientId": "client-pos",
+        "created_at": "2025-10-11T07:09:51.156Z",
+        "updated_at": "2025-10-11T07:09:51.156Z",
+        "version": 30,
+        "client_id": "client-pos"
+      },
+      {
+        "stock": 10,
+        "clientId": "client-pos",
+        "created_at": "2025-10-11T07:11:14.212Z",
+        "updated_at": "2025-10-11T07:11:14.212Z",
+        "version": 32,
+        "client_id": "client-pos"
+      },
+      {
+        "stock": 10,
+        "clientId": "client-pos",
+        "created_at": "2025-10-11T07:15:59.721Z",
+        "updated_at": "2025-10-11T07:15:59.721Z",
+        "version": 34,
+        "client_id": "client-pos"
+      },
+      {
+        "stock": 10,
+        "clientId": "client-pos",
+        "created_at": "2025-10-11T07:16:15.372Z",
+        "updated_at": "2025-10-11T07:16:15.372Z",
+        "version": 35,
+        "client_id": "client-pos"
+      }
     ],
     "created_at": "2025-10-10T07:18:39.111Z",
-    "updated_at": "2025-10-10T23:43:03.966Z",
-    "version": 256
+    "updated_at": "2025-10-11T07:16:15.372Z",
+    "version": 256,
+    "versionLog": [
+      {
+        "version": null,
+        "timestamp": "2025-10-11T06:03:20.259Z",
+        "operation": "delete",
+        "itemIds": [
+          "12"
+        ],
+        "clientId": "server"
+      },
+      {
+        "version": null,
+        "timestamp": "2025-10-11T06:05:09.418Z",
+        "operation": "delete",
+        "itemIds": [
+          "11"
+        ],
+        "clientId": "server"
+      },
+      {
+        "version": null,
+        "timestamp": "2025-10-11T06:07:11.352Z",
+        "operation": "delete",
+        "itemIds": [
+          "10"
+        ],
+        "clientId": "server"
+      },
+      {
+        "version": null,
+        "timestamp": "2025-10-11T06:10:52.040Z",
+        "operation": "delete",
+        "itemIds": [
+          "9"
+        ],
+        "clientId": "server"
+      },
+      {
+        "version": null,
+        "timestamp": "2025-10-11T06:16:15.342Z",
+        "operation": "delete",
+        "itemIds": [
+          "8"
+        ],
+        "clientId": "server"
+      },
+      {
+        "version": null,
+        "timestamp": "2025-10-11T06:18:20.177Z",
+        "operation": "delete",
+        "itemIds": [
+          "7"
+        ],
+        "clientId": "server"
+      },
+      {
+        "version": null,
+        "timestamp": "2025-10-11T06:23:03.426Z",
+        "operation": "update",
+        "itemIds": [
+          6
+        ],
+        "clientId": "client-1760162588819-qbq21ua3q"
+      },
+      {
+        "version": 2,
+        "timestamp": "2025-10-11T06:24:49.005Z",
+        "operation": "update",
+        "itemIds": [
+          6
+        ],
+        "clientId": "client-1760162588204-eqvlfeuhs"
+      },
+      {
+        "version": 4,
+        "timestamp": "2025-10-11T06:27:35.733Z",
+        "operation": "update",
+        "itemIds": [
+          6
+        ],
+        "clientId": "client-1760162588204-eqvlfeuhs"
+      },
+      {
+        "version": 6,
+        "timestamp": "2025-10-11T06:29:15.227Z",
+        "operation": "update",
+        "itemIds": [
+          6
+        ],
+        "clientId": "client-1760162588204-eqvlfeuhs"
+      },
+      {
+        "version": 8,
+        "timestamp": "2025-10-11T06:38:15.244Z",
+        "operation": "create",
+        "itemIds": [
+          "1760164695227-3781"
+        ],
+        "clientId": "client-1760162588204-eqvlfeuhs"
+      },
+      {
+        "version": 10,
+        "timestamp": "2025-10-11T06:38:51.431Z",
+        "operation": "create",
+        "itemIds": [
+          "1760164731288-8177"
+        ],
+        "clientId": "client-1760162588819-qbq21ua3q"
+      },
+      {
+        "version": 12,
+        "timestamp": "2025-10-11T06:39:44.555Z",
+        "operation": "create",
+        "itemIds": [
+          "1760164784448-335"
+        ],
+        "clientId": "client-1760162588819-qbq21ua3q"
+      },
+      {
+        "version": 14,
+        "timestamp": "2025-10-11T06:41:10.969Z",
+        "operation": "create",
+        "itemIds": [
+          "1760164870866-5546"
+        ],
+        "clientId": "client-1760162588819-qbq21ua3q"
+      },
+      {
+        "version": 15,
+        "timestamp": "2025-10-11T06:45:21.718Z",
+        "operation": "delete",
+        "itemIds": [
+          "1760164731288-8177"
+        ],
+        "clientId": "server"
+      },
+      {
+        "version": 16,
+        "timestamp": "2025-10-11T06:46:48.276Z",
+        "operation": "delete",
+        "itemIds": [
+          "1760164870866-5546"
+        ],
+        "clientId": "server"
+      },
+      {
+        "version": 18,
+        "timestamp": "2025-10-11T06:49:49.705Z",
+        "operation": "create",
+        "itemIds": [
+          "1760165389559-2557"
+        ],
+        "clientId": "client-1760162588819-qbq21ua3q"
+      },
+      {
+        "version": 19,
+        "timestamp": "2025-10-11T06:52:35.113Z",
+        "operation": "delete",
+        "itemIds": [
+          "1760164784448-335"
+        ],
+        "clientId": "server"
+      },
+      {
+        "version": 20,
+        "timestamp": "2025-10-11T06:52:35.524Z",
+        "operation": "delete",
+        "itemIds": [
+          "1760165389559-2557"
+        ],
+        "clientId": "server"
+      },
+      {
+        "version": 21,
+        "timestamp": "2025-10-11T06:52:36.196Z",
+        "operation": "delete",
+        "itemIds": [
+          "1760164695227-3781"
+        ],
+        "clientId": "server"
+      },
+      {
+        "version": 23,
+        "timestamp": "2025-10-11T06:53:15.071Z",
+        "operation": "create",
+        "itemIds": [
+          "1760165594877-2098"
+        ],
+        "clientId": "client-1760162588819-qbq21ua3q"
+      },
+      {
+        "version": 25,
+        "timestamp": "2025-10-11T06:53:34.638Z",
+        "operation": "create",
+        "itemIds": [
+          "1760165614543-5306"
+        ],
+        "clientId": "client-1760162588819-qbq21ua3q"
+      },
+      {
+        "version": 26,
+        "timestamp": "2025-10-11T07:01:59.001Z",
+        "operation": "create",
+        "itemIds": [
+          "p1"
+        ],
+        "clientId": "client-pos"
+      },
+      {
+        "version": 27,
+        "timestamp": "2025-10-11T07:04:59.643Z",
+        "operation": "create",
+        "itemIds": [
+          "p1"
+        ],
+        "clientId": "client-pos"
+      },
+      {
+        "version": 28,
+        "timestamp": "2025-10-11T07:05:20.865Z",
+        "operation": "create",
+        "itemIds": [
+          "p1"
+        ],
+        "clientId": "client-pos"
+      },
+      {
+        "version": 29,
+        "timestamp": "2025-10-11T07:06:17.097Z",
+        "operation": "create",
+        "itemIds": [
+          "p1"
+        ],
+        "clientId": "client-pos"
+      },
+      {
+        "version": 30,
+        "timestamp": "2025-10-11T07:09:51.156Z",
+        "operation": "create",
+        "itemIds": [
+          "p1"
+        ],
+        "clientId": "client-pos"
+      },
+      {
+        "version": 31,
+        "timestamp": "2025-10-11T07:09:51.156Z",
+        "operation": "create",
+        "itemIds": [
+          "p1"
+        ],
+        "clientId": "client-pos"
+      },
+      {
+        "version": 32,
+        "timestamp": "2025-10-11T07:11:14.211Z",
+        "operation": "create",
+        "itemIds": [
+          "p1"
+        ],
+        "clientId": "client-pos"
+      },
+      {
+        "version": 33,
+        "timestamp": "2025-10-11T07:11:14.212Z",
+        "operation": "create",
+        "itemIds": [
+          "p1"
+        ],
+        "clientId": "client-pos"
+      },
+      {
+        "version": 34,
+        "timestamp": "2025-10-11T07:15:59.721Z",
+        "operation": "create",
+        "itemIds": [
+          "p1"
+        ],
+        "clientId": "client-pos"
+      },
+      {
+        "version": 35,
+        "timestamp": "2025-10-11T07:16:15.372Z",
+        "operation": "create",
+        "itemIds": [
+          "p1"
+        ],
+        "clientId": "client-pos"
+      }
+    ],
+    "currentVersion": 35
   },
   "tickets": {
     "data": [
@@ -694,5 +996,50 @@
     "updated_at": "2025-10-10T23:02:03.935Z",
     "version": 287,
     "last_sync_client": "unknown"
+  },
+  "sales": {
+    "data": [
+      {
+        "id": "3",
+        "total": 300,
+        "newField": true,
+        "version": 3,
+        "updated_at": "2025-10-11T07:01:58.966Z",
+        "created_at": "2025-10-11T07:01:58.966Z",
+        "client_id": "client-c"
+      }
+    ],
+    "currentVersion": 5,
+    "versionLog": [
+      {
+        "version": 2,
+        "timestamp": "2025-10-11T07:01:58.966Z",
+        "operation": "create",
+        "itemIds": [
+          "2"
+        ],
+        "clientId": "client-c"
+      },
+      {
+        "version": 4,
+        "timestamp": "2025-10-11T07:01:58.966Z",
+        "operation": "create",
+        "itemIds": [
+          "3"
+        ],
+        "clientId": "client-c"
+      },
+      {
+        "version": 5,
+        "timestamp": "2025-10-11T07:01:59.028Z",
+        "operation": "delete",
+        "itemIds": [
+          "2"
+        ],
+        "clientId": "server"
+      }
+    ],
+    "created_at": "2025-10-11T07:01:58.966Z",
+    "updated_at": "2025-10-11T07:01:59.028Z"
   }
 }

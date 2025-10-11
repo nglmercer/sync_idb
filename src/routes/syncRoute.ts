@@ -1,4 +1,3 @@
-// src/routes/syncRoute.ts
 import { Hono } from 'hono';
 import { DataStorage } from 'json-obj-manager';
 import { JSONFileAdapter } from 'json-obj-manager/node';
@@ -8,13 +7,28 @@ import { notificationManager } from '../websocket/notificationManager';
 
 const PointSalesPath = path.join(process.cwd(), "./PointSales.json");
 
-interface TimestampedData {
+interface VersionedData {
   created_at: string;
   updated_at: string;
-  synced_at?: string;
-  version?: number;
+  version: number;
   client_id?: string;
   [key: string]: any;
+}
+
+interface StoreMetadata {
+  data: VersionedData[];
+  currentVersion: number;
+  versionLog: VersionLogEntry[];
+  created_at: string;
+  updated_at: string;
+}
+
+interface VersionLogEntry {
+  version: number;
+  timestamp: string;
+  operation: 'create' | 'update' | 'delete' | 'bulk';
+  itemIds: string[];
+  clientId: string;
 }
 
 interface SyncConflictLog {
@@ -25,58 +39,72 @@ interface SyncConflictLog {
 }
 
 const Databases = {
-  PointSales: new DataStorage<TimestampedData>(new JSONFileAdapter(PointSalesPath)),
+  PointSales: new DataStorage<any>(new JSONFileAdapter(PointSalesPath)),
 };
 
 const conflictLogs: SyncConflictLog[] = [];
 const MAX_CONFLICT_LOGS = 100;
 
-const syncRoute = new Hono();
-
-// ============================================
-// HELPER: Broadcast de cambios por WebSocket
-// ============================================
-
 const broadcastChange = (storeName: string, action: string, data: any) => {
-  // Emitir evento de sincronización a todos los clientes
   notificationManager.broadcast('sync:change', {
     storeName,
     action,
     item: data,
+    data,
+    version: data.version,
     timestamp: new Date().toISOString()
   });
-  
-  console.log(`📡 Broadcasted ${action} on ${storeName} to all clients`);
 };
 
 const broadcastStockUpdate = (updates: any[]) => {
   notificationManager.broadcast('stock:update', updates);
-  console.log(`📡 Broadcasted stock updates: ${updates.length} items`);
 };
 
-// Helper para añadir timestamps y versión
-const addTimestamps = (data: any, isUpdate: boolean = false, clientId?: string) => {
+const initStoreMetadata = (): StoreMetadata => ({
+  data: [],
+  currentVersion: 0,
+  versionLog: [],
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString()
+});
+
+const addVersionedData = (data: any, isUpdate: boolean, clientId: string, newVersion: number): VersionedData => {
   const now = new Date().toISOString();
-  
-  const baseData = {
-    ...data,
-    updated_at: now,
-    synced_at: now,
-    client_id: clientId || data.client_id || 'unknown'
-  };
-  
-  if (isUpdate && data.created_at) {
-    return {
-      ...baseData,
-      version: (data.version || 0) + 1
-    };
-  }
-  
+
   return {
-    ...baseData,
+    ...data,
     created_at: data.created_at || now,
-    version: data.version || 1
+    updated_at: now,
+    version: newVersion,
+    client_id: clientId
   };
+};
+
+const addVersionLog = (
+  storeMetadata: StoreMetadata,
+  operation: VersionLogEntry['operation'],
+  itemIds: string[],
+  clientId: string
+): number => {
+  if (!storeMetadata.versionLog) {
+    storeMetadata.versionLog = [];
+  }
+
+  storeMetadata.currentVersion++;
+
+  storeMetadata.versionLog.push({
+    version: storeMetadata.currentVersion,
+    timestamp: new Date().toISOString(),
+    operation,
+    itemIds,
+    clientId
+  });
+
+  if (storeMetadata.versionLog.length > 1000) {
+    storeMetadata.versionLog = storeMetadata.versionLog.slice(-500);
+  }
+
+  return storeMetadata.currentVersion;
 };
 
 const logConflicts = (storeName: string, conflicts: any[]) => {
@@ -87,265 +115,250 @@ const logConflicts = (storeName: string, conflicts: any[]) => {
       conflicts,
       resolved: true
     });
-    
+
     if (conflictLogs.length > MAX_CONFLICT_LOGS) {
       conflictLogs.length = MAX_CONFLICT_LOGS;
     }
   }
 };
 
-// ============================================
-// GET - Obtener todos los registros
-// ============================================
+const syncRoute = new Hono();
+
 syncRoute.get('/sync/:dbName/:storeName', async (c) => {
   const { dbName, storeName } = c.req.param();
-  
+
   if (!Databases[dbName]) {
     return c.json({ data: [], message: 'Database not found: ' + dbName }, 404);
   }
-  
-  const db = Databases[dbName] as DataStorage<TimestampedData>;
-  const data = await db.load(storeName);
-  
-  if (!data) {
-    return c.json({ data: [], count: 0, timestamp: new Date().toISOString() });
+
+  const db = Databases[dbName];
+  let storeMetadata = await db.load(storeName) as StoreMetadata;
+
+  if (!storeMetadata || !storeMetadata.data) {
+    storeMetadata = initStoreMetadata();
   }
-  
-  const dataArray = data.data || (Array.isArray(data) ? data : Object.values(data));
-  
+
+  const dataArray = storeMetadata.data.filter(item => item !== null && item !== undefined);
+
   return c.json({
     data: dataArray,
-    count: Array.isArray(dataArray) ? dataArray.length : 1,
-    timestamp: new Date().toISOString(),
-    version: data.version || 1
+    count: dataArray.length,
+    version: storeMetadata.currentVersion || 0,
+    timestamp: new Date().toISOString()
   });
 });
 
-// ============================================
-// POST - Sincronizar múltiples registros
-// ============================================
 syncRoute.post('/sync/:dbName/:storeName', async (c) => {
   const { dbName, storeName } = c.req.param();
   const body = await c.req.json();
-  const { 
-    data: incomingData, 
+  const {
+    data: incomingData,
     clientId = 'unknown',
     strategy = 'field-level-merge',
-    idField = 'id'
+    idField = 'id',
+    lastVersion = 0
   } = body;
-  
+
   if (!Array.isArray(incomingData)) {
     return c.json({ error: 'Data must be an array' }, 400);
   }
-  
+
   if (!Databases[dbName]) {
     return c.json({ error: 'Database not found: ' + dbName }, 404);
   }
-  
-  const db = Databases[dbName] as DataStorage<TimestampedData>;
-  
-  // Cargar datos existentes
-  const existingData = await db.load(storeName);
-  let localArray: any[] = [];
-  
-  if (existingData) {
-    if (existingData.data && Array.isArray(existingData.data)) {
-      localArray = existingData.data;
-    } else if (Array.isArray(existingData)) {
-      localArray = existingData;
-    } else if (typeof existingData === 'object') {
-      localArray = Object.values(existingData);
-    }
+
+  const db = Databases[dbName];
+  let storeMetadata = await db.load(storeName) as StoreMetadata;
+
+  if (!storeMetadata || !storeMetadata.data) {
+    storeMetadata = initStoreMetadata();
   }
-  
-  // Hacer merge de arrays con detección de conflictos
-  const { merged, conflicts } = mergeManager.mergeArrays(
-    localArray,
-    incomingData,
-    idField,
-    { strategy: strategy as any }
+
+  if (lastVersion < storeMetadata.currentVersion) {
+    console.warn(`⚠️ Version conflict for ${storeName}. Client v${lastVersion} vs Server v${storeMetadata.currentVersion}. Full Sync required.`);
+    return c.json({
+      success: false,
+      needsFullSync: true,
+      serverVersion: storeMetadata.currentVersion,
+      message: `Version conflict. Client version ${lastVersion} is outdated. Server is at ${storeMetadata.currentVersion}.`
+    }, 409);
+  }
+
+  const localDataMap = new Map(
+    storeMetadata.data.filter(item => item && item[idField] != null).map(item => [item[idField], item])
   );
-  
-  // Añadir timestamps a todos los registros
-  const timestampedData = merged.map(item => 
-    addTimestamps(item, !!item.created_at, clientId)
-  );
-  
-  // Guardar datos mergeados
-  const dataToSave = {
-    data: timestampedData,
-    created_at: existingData?.created_at || new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    version: (existingData?.version || 0) + 1,
-    last_sync_client: clientId
-  };
-  
-  await db.save(storeName, dataToSave as any);
-  
-  // Registrar conflictos si los hay
+
+  const conflicts: any[] = [];
+  const processedItems: VersionedData[] = [];
+  const createdIds: string[] = [];
+  const updatedIds: string[] = [];
+
+  for (const item of incomingData) {
+    const id = item[idField];
+    const existingItem = localDataMap.get(id);
+    const now = new Date().toISOString();
+
+    let finalItem: VersionedData;
+    let operation: 'create' | 'update';
+
+    if (existingItem) {
+      operation = 'update';
+      updatedIds.push(id);
+      const { merged, conflict } = mergeManager.mergeObjects(existingItem, item, { strategy: strategy as any });
+      if (conflict) conflicts.push(conflict);
+      finalItem = merged as VersionedData;
+    } else {
+      operation = 'create';
+      createdIds.push(id);
+      finalItem = item;
+    }
+
+    finalItem.updated_at = now;
+    finalItem.created_at = existingItem?.created_at || now;
+    finalItem.client_id = clientId;
+
+    localDataMap.set(id, finalItem);
+    processedItems.push(finalItem);
+  }
+
+  const newVersion = addVersionLog(storeMetadata, 'bulk', [...createdIds, ...updatedIds], clientId);
+
+  processedItems.forEach(item => item.version = newVersion);
+
+  storeMetadata.data = Array.from(localDataMap.values());
+  storeMetadata.updated_at = new Date().toISOString();
+
+  await db.save(storeName, storeMetadata);
+
   logConflicts(storeName, conflicts);
-  
-  // 🔥 BROADCAST: Notificar a todos los clientes sobre los cambios
-  if (timestampedData.length > 0) {
-    broadcastChange(storeName, 'bulk-update', {
-      count: timestampedData.length,
-      items: timestampedData
+
+  if (processedItems.length > 0) {
+    broadcastChange(storeName, 'update', {
+      count: processedItems.length,
+      items: processedItems,
+      version: storeMetadata.currentVersion
     });
   }
-  
+
   return c.json({
     success: true,
     synced: incomingData.length,
-    created: timestampedData.length - localArray.length,
-    updated: Math.min(localArray.length, incomingData.length),
     conflicts: conflicts.length,
-    conflictReport: conflicts.length > 0 ? mergeManager.generateConflictReport(conflicts) : null,
-    merged: timestampedData,
-    timestamp: new Date().toISOString(),
-    version: dataToSave.version
+    version: storeMetadata.currentVersion,
+    timestamp: new Date().toISOString()
   });
 });
 
-// ============================================
-// PUT - Actualizar o crear un registro individual
-// ============================================
 syncRoute.put('/sync/:dbName/:storeName/:id', async (c) => {
   const { dbName, storeName, id } = c.req.param();
   const body = await c.req.json();
   const { clientId = 'unknown' } = body;
-  
+
   if (!Databases[dbName]) {
     return c.json({ error: 'Database not found: ' + dbName }, 404);
   }
 
-  const db = Databases[dbName] as DataStorage<TimestampedData>;
-  
-  // Cargar datos existentes
-  const storeData = await db.load(storeName);
-  let store: any = {};
-  
-  if (storeData) {
-    if (storeData.data && typeof storeData.data === 'object') {
-      store = storeData.data;
-    } else if (typeof storeData === 'object' && !Array.isArray(storeData)) {
-      store = storeData;
-    }
+  const db = Databases[dbName];
+  let storeMetadata = await db.load(storeName) as StoreMetadata;
+
+  if (!storeMetadata || !storeMetadata.data) {
+    storeMetadata = initStoreMetadata();
   }
-  
-  const exists = store.hasOwnProperty(id);
-  const existing = exists ? store[id] : null;
-  
-  let mergedData = body;
+
+  const existingIndex = storeMetadata.data.findIndex(item => item && item.id == id);
+  const exists = existingIndex !== -1;
+  const existing = exists ? storeMetadata.data[existingIndex] : null;
+
+  let mergedData;
   let hadConflict = false;
-  
-  // Si existe, hacer merge inteligente
+
   if (existing) {
-    const hasConflict = mergeManager.hasConflict(existing, body);
-    
-    if (hasConflict) {
-      // Merge a nivel de campo
-      mergedData = mergeManager['fieldLevelMerge'](
-        existing,
-        body,
-        new Date(existing.updated_at || existing.created_at),
-        new Date(body.updated_at || new Date())
-      );
+    const { merged, conflict } = mergeManager.mergeObjects(existing, body, { strategy: 'field-level-merge' });
+    mergedData = merged;
+    if (conflict) {
       hadConflict = true;
-    } else {
-      mergedData = { ...existing, ...body };
+      logConflicts(storeName, [conflict]);
     }
+  } else {
+    mergedData = body;
+  }
+
+  const action = exists ? 'update' : 'create';
+  const newVersion = addVersionLog(storeMetadata, action, [id], clientId);
+
+  const versionedData = addVersionedData(mergedData, exists, clientId, newVersion);
+  
+  if (exists) {
+    storeMetadata.data[existingIndex] = versionedData;
+  } else {
+    storeMetadata.data.push(versionedData);
   }
   
-  // Añadir timestamps preservando created_at si existe
-  const timestampedData = addTimestamps(mergedData, exists, clientId);
-  
-  store[id] = timestampedData;
-  
-  // Guardar el store actualizado
-  const dataToSave = {
-    data: store,
-    created_at: storeData?.created_at || new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    version: (storeData?.version || 0) + 1
-  };
-  
-  await db.save(storeName, dataToSave as any);
-  
-  // 🔥 BROADCAST: Notificar cambio individual
-  const action = exists ? 'update' : 'create';
-  broadcastChange(storeName, action, timestampedData);
-  
-  // Si es productos y hay cambio de stock, broadcast específico
-  if (storeName === 'products' && timestampedData.stock !== undefined) {
+  // REMOVED DUPLICATE: addVersionLog was called twice before
+  storeMetadata.updated_at = new Date().toISOString();
+
+  await db.save(storeName, storeMetadata);
+
+  broadcastChange(storeName, action, versionedData);
+
+  if (storeName === 'products' && versionedData.stock !== undefined) {
     broadcastStockUpdate([{
       productId: id,
-      stock: timestampedData.stock,
-      timestamp: timestampedData.updated_at
+      stock: versionedData.stock,
+      timestamp: versionedData.updated_at
     }]);
   }
-  
+
   return c.json({
     success: true,
     action,
     hadConflict,
-    data: timestampedData,
-    timestamp: new Date().toISOString(),
-    version: dataToSave.version
+    data: versionedData,
+    version: storeMetadata.currentVersion,
+    timestamp: new Date().toISOString()
   });
 });
 
-// ============================================
-// PATCH - Actualizar parcialmente
-// ============================================
 syncRoute.patch('/sync/:dbName/:storeName/:id', async (c) => {
   const { dbName, storeName, id } = c.req.param();
   const body = await c.req.json();
   const { clientId = 'unknown' } = body;
-  
+
   if (!Databases[dbName]) {
     return c.json({ error: 'Database not found: ' + dbName }, 404);
   }
-  
-  const db = Databases[dbName] as DataStorage<TimestampedData>;
-  const storeData = await db.load(storeName);
-  
-  if (!storeData) {
+
+  const db = Databases[dbName];
+  let storeMetadata = await db.load(storeName) as StoreMetadata;
+
+  if (!storeMetadata || !storeMetadata.data) {
     return c.json({ error: 'Store not found' }, 404);
   }
-  
-  const store = storeData.data || storeData;
-  
-  if (!store || !store.hasOwnProperty(id)) {
+
+  const existingIndex = storeMetadata.data.findIndex(item => item && item.id == id);
+
+  if (existingIndex === -1) {
     return c.json({ error: 'Record not found' }, 404);
   }
+
+  const existing = storeMetadata.data[existingIndex];
+
+  const { merged, conflict } = mergeManager.mergeObjects(existing, body, { strategy: 'field-level-merge' });
+  if (conflict) {
+    logConflicts(storeName, [conflict]);
+  }
   
-  const existing = store[id];
-  
-  // Merge a nivel de campo
-  const merged = mergeManager['fieldLevelMerge'](
-    existing,
-    body,
-    new Date(existing.updated_at || existing.created_at),
-    new Date()
-  );
-  
-  const updated = addTimestamps(merged, true, clientId);
-  
-  store[id] = updated;
-  
-  const dataToSave = {
-    data: store,
-    created_at: storeData.created_at || new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    version: (storeData.version || 0) + 1
-  };
-  
-  await db.save(storeName, dataToSave as any);
-  
-  // 🔥 BROADCAST: Notificar actualización parcial
+  const newVersion = addVersionLog(storeMetadata, 'update', [id], clientId);
+  const updated = addVersionedData(merged, true, clientId, newVersion);
+  storeMetadata.data[existingIndex] = updated;
+
+  // REMOVED DUPLICATE: addVersionLog was called twice before
+  storeMetadata.updated_at = new Date().toISOString();
+
+  await db.save(storeName, storeMetadata);
+
   broadcastChange(storeName, 'patch', updated);
-  
-  // Stock update específico si aplica
+
   if (storeName === 'products' && updated.stock !== undefined) {
     broadcastStockUpdate([{
       productId: id,
@@ -353,110 +366,107 @@ syncRoute.patch('/sync/:dbName/:storeName/:id', async (c) => {
       timestamp: updated.updated_at
     }]);
   }
-  
+
   return c.json({
     success: true,
     action: 'patched',
     data: updated,
-    timestamp: new Date().toISOString(),
-    version: dataToSave.version
+    version: storeMetadata.currentVersion,
+    timestamp: new Date().toISOString()
   });
 });
 
-// ============================================
-// DELETE - Eliminar un registro
-// ============================================
 syncRoute.delete('/sync/:dbName/:storeName/:id', async (c) => {
   const { dbName, storeName, id } = c.req.param();
-  
+  const body = await c.req.json().catch(() => ({}));
+  const { clientId = 'server' } = body;
+
   if (!Databases[dbName]) {
     return c.json({ error: 'Database not found: ' + dbName }, 404);
   }
-  
-  const db = Databases[dbName] as DataStorage<TimestampedData>;
-  const storeData = await db.load(storeName);
-  
-  if (!storeData) {
+
+  const db = Databases[dbName];
+  let storeMetadata = await db.load(storeName) as StoreMetadata;
+
+  if (!storeMetadata || !storeMetadata.data) {
     return c.json({ error: 'Store not found' }, 404);
   }
-  
-  const store = storeData.data || storeData;
-  const itemToDelete = store[id];
-  const deleted = delete store[id];
-  
-  if (deleted) {
-    const dataToSave = {
-      data: store,
-      created_at: storeData.created_at,
-      updated_at: new Date().toISOString(),
-      version: (storeData.version || 0) + 1
-    };
-    
-    await db.save(storeName, dataToSave as any);
-    
-    // 🔥 BROADCAST: Notificar eliminación
-    broadcastChange(storeName, 'delete', { id, ...itemToDelete });
+
+  if (!storeMetadata.versionLog) {
+    storeMetadata.versionLog = [];
   }
-  
+
+  const itemIndex = storeMetadata.data.findIndex(item => item && item.id == id);
+
+  if (itemIndex === -1) {
+    return c.json({ error: 'Item not found' }, 404);
+  }
+
+  const itemToDelete = storeMetadata.data[itemIndex];
+
+  storeMetadata.data.splice(itemIndex, 1);
+
+  addVersionLog(storeMetadata, 'delete', [id], clientId);
+  storeMetadata.updated_at = new Date().toISOString();
+
+  await db.save(storeName, storeMetadata);
+
+  broadcastChange(storeName, 'delete', { id, ...itemToDelete });
+
   return c.json({
-    success: deleted,
+    success: true,
+    version: storeMetadata.currentVersion,
     timestamp: new Date().toISOString()
   });
 });
 
-// ============================================
-// GET - Obtener cambios desde timestamp
-// ============================================
-syncRoute.get('/sync/:dbName/:storeName/since/:timestamp', async (c) => {
-  const { dbName, storeName, timestamp } = c.req.param();
-  
+syncRoute.get('/sync/:dbName/:storeName/from/:version', async (c) => {
+  const { dbName, storeName, version } = c.req.param();
+  const fromVersion = parseInt(version, 10);
+
   if (!Databases[dbName]) {
     return c.json({ data: [], count: 0 });
   }
-  
-  const db = Databases[dbName] as DataStorage<TimestampedData>;
-  const storeData = await db.load(storeName);
-  
-  if (!storeData) {
-    return c.json({ data: [], count: 0 });
+
+  const db = Databases[dbName];
+  let storeMetadata = await db.load(storeName) as StoreMetadata;
+
+  if (!storeMetadata || !storeMetadata.data) {
+    return c.json({
+      data: [],
+      count: 0,
+      currentVersion: 0,
+      hasMore: false
+    });
   }
-  
-  const store = storeData.data || storeData;
-  const sinceDate = new Date(timestamp);
-  
-  const results = Object.values(store).filter((item: any) => {
-    // Verificar que el item es un objeto válido
-    if (!item || typeof item !== 'object') {
-      return false;
-    }
-    
-    // Verificar que updated_at existe y es válido
-    if (!item.updated_at) {
-      return false;
-    }
-    
-    // Verificar que la fecha es válida
-    const itemDate = new Date(item.updated_at);
-    return !isNaN(itemDate.getTime()) && itemDate > sinceDate;
+
+  const changedLogs = storeMetadata.versionLog?.filter(log => log.version > fromVersion) || [];
+  const changedIds = new Set<string>();
+
+  changedLogs.forEach(log => {
+    log.itemIds.forEach(id => changedIds.add(id));
   });
-  
-  console.log(`📤 Enviando ${results.length} cambios desde ${timestamp} para ${storeName}`);
-  
+
+  const changedItems = storeMetadata.data.filter(item =>
+    item && changedIds.has(String(item.id))
+  );
+
+  console.log(`📤 Version sync ${storeName}: from v${fromVersion} to v${storeMetadata.currentVersion}, ${changedItems.length} changes`);
+
   return c.json({
-    data: results,
-    count: results.length,
+    data: changedItems,
+    count: changedItems.length,
+    currentVersion: storeMetadata.currentVersion,
+    hasMore: false,
     timestamp: new Date().toISOString()
   });
 });
 
-// ============================================
-// GET - Logs de conflictos
-// ============================================
 syncRoute.get('/sync/:dbName/:storeName/conflicts', async (c) => {
   const { storeName } = c.req.param();
-  
+
   const storeConflicts = conflictLogs.filter(log => log.storeName === storeName);
-  
+
   return c.json({
     conflicts: storeConflicts,
     count: storeConflicts.length,
@@ -464,54 +474,34 @@ syncRoute.get('/sync/:dbName/:storeName/conflicts', async (c) => {
   });
 });
 
-// ============================================
-// GET - Estadísticas de un store
-// ============================================
 syncRoute.get('/sync/:dbName/:storeName/stats', async (c) => {
   const { dbName, storeName } = c.req.param();
-  
+
   if (!Databases[dbName]) {
     return c.json({ error: 'Database not found: ' + dbName }, 404);
   }
-  
-  const db = Databases[dbName] as DataStorage<TimestampedData>;
-  const storeData = await db.load(storeName);
-  
-  if (!storeData) {
+
+  const db = Databases[dbName];
+  let storeMetadata = await db.load(storeName) as StoreMetadata;
+
+  if (!storeMetadata || !storeMetadata.data) {
     return c.json({ error: 'Store not found' }, 404);
   }
-  
-  const store = storeData.data || storeData;
-  const items = Object.values(store) as TimestampedData[];
-  
-  const now = Date.now();
-  const last24h = items.filter(item => 
-    now - new Date(item.updated_at).getTime() < 24 * 60 * 60 * 1000
-  ).length;
-  
-  const last7d = items.filter(item => 
-    now - new Date(item.updated_at).getTime() < 7 * 24 * 60 * 60 * 1000
-  ).length;
-  
+
+  const items = storeMetadata.data.filter(item => item !== null && item !== undefined);
+
   const byClient: Record<string, number> = {};
   items.forEach(item => {
     const clientId = item.client_id || 'unknown';
     byClient[clientId] = (byClient[clientId] || 0) + 1;
   });
-  
+
   return c.json({
     total: items.length,
-    updatedLast24h: last24h,
-    updatedLast7d: last7d,
-    version: storeData.version || 1,
+    currentVersion: storeMetadata.currentVersion,
     byClient,
     conflicts: conflictLogs.filter(log => log.storeName === storeName).length,
-    oldestRecord: items.reduce((oldest, item) => {
-      return !oldest || new Date(item.created_at) < new Date(oldest.created_at) ? item : oldest;
-    }, null as any)?.created_at,
-    newestRecord: items.reduce((newest, item) => {
-      return !newest || new Date(item.created_at) > new Date(newest.created_at) ? item : newest;
-    }, null as any)?.created_at,
+    lastModified: storeMetadata.updated_at,
     timestamp: new Date().toISOString()
   });
 });
