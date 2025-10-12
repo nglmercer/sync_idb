@@ -7,11 +7,21 @@
       "keyPath": "id",
       "autoIncrement": false,
       "data": {
-        "1760251391268-1088": {
-          "id": "1760251391268-1088",
-          "name": "123",
+        "1760252022420-9044": {
+          "id": "1760252022420-9044",
+          "name": "TQWTQWQTTQW",
+          "price": 123123,
+          "category": "drinks",
+          "description": "",
+          "image": "",
+          "fallback": "",
+          "stock": null
+        },
+        "1760253057468-8145": {
+          "id": "1760253057468-8145",
+          "name": "asdasd",
           "price": 123,
-          "category": "meals",
+          "category": "sides",
           "description": "",
           "image": "",
           "fallback": "",
@@ -23,7 +33,47 @@
       "name": "tickets",
       "keyPath": "id",
       "autoIncrement": false,
-      "data": {}
+      "data": {
+        "MCK093604": {
+          "id": "MCK093604",
+          "ticketID": "MCK093604",
+          "customerData": {
+            "name": "123",
+            "dni": "123",
+            "phone": "123",
+            "address": "",
+            "orderType": "takeout",
+            "id": "123"
+          },
+          "cartItems": [
+            {
+              "id": "1760252022420-9044",
+              "name": "TQWTQWQTTQW",
+              "price": 123123,
+              "category": "drinks",
+              "description": "",
+              "image": "",
+              "fallback": "",
+              "stock": null,
+              "quantity": 4
+            },
+            {
+              "id": "1760253057468-8145",
+              "name": "asdasd",
+              "price": 123,
+              "category": "sides",
+              "description": "",
+              "image": "",
+              "fallback": "",
+              "stock": null,
+              "quantity": 3
+            }
+          ],
+          "total": 492861,
+          "date": "12 oct 2025",
+          "time": "02:11"
+        }
+      }
     },
     "customers": {
       "name": "customers",
