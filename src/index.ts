@@ -7,12 +7,18 @@ import { upgradeWebSocket } from 'hono/bun';
 import { websocket } from 'hono/bun';
 import { notificationManager } from './websocket/notificationManager';
 import backupRoute from './routes/backupRoute';
-import syncRoute from './routes/syncRoute';
+import newsyncRoute from './routes/newsyncRoute';
 import wsRouter from './websocket/wsRouter';
 import type { StockUpdate, StockAddition, StockSubtraction } from './types/stock';
-
+import dbManager from './modulos/idb';
 const app = new Hono();
-
+dbManager.openDatabase();
+dbManager.on('open', () => {
+    console.log('Database opened');
+});
+dbManager.on('error', (err) => {
+    console.error('Database error:', err);
+});
 // Middlewares
 app.use('*', logger());
 app.use('*', prettyJSON());
@@ -46,7 +52,7 @@ app.get('/ws', upgradeWebSocket(() => {
 app.get('/', (c) => c.json({ message: 'API is running' }));
 // Otras rutas
 app.route('/api', backupRoute);
-app.route('/api', syncRoute);
+app.route('/api', newsyncRoute);
 app.route('/api', wsRouter);
 // Error handlers
 app.notFound((c) => {

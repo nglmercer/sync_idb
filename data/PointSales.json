@@ -1,0 +1,35 @@
+{
+  "name": "PointSales",
+  "version": 2,
+  "stores": {
+    "products": {
+      "name": "products",
+      "keyPath": "id",
+      "autoIncrement": false,
+      "data": {
+        "1760251391268-1088": {
+          "id": "1760251391268-1088",
+          "name": "123",
+          "price": 123,
+          "category": "meals",
+          "description": "",
+          "image": "",
+          "fallback": "",
+          "stock": null
+        }
+      }
+    },
+    "tickets": {
+      "name": "tickets",
+      "keyPath": "id",
+      "autoIncrement": false,
+      "data": {}
+    },
+    "customers": {
+      "name": "customers",
+      "keyPath": "id",
+      "autoIncrement": false,
+      "data": {}
+    }
+  }
+}
