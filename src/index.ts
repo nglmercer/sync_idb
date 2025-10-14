@@ -9,7 +9,8 @@ import { notificationManager } from './websocket/notificationManager';
 import backupRoute from './routes/backupRoute';
 import newsyncRoute from './routes/newsyncRoute';
 import wsRouter from './websocket/wsRouter';
-import type { StockUpdate, StockAddition, StockSubtraction } from './types/stock';
+import { staticRoutes } from './routes/static';
+import path from 'path';
 import dbManager from './modulos/idb';
 const app = new Hono();
 dbManager.openDatabase();
@@ -23,7 +24,7 @@ dbManager.on('error', (err) => {
 app.use('*', logger());
 app.use('*', prettyJSON());
 app.use('*', cors({
-  origin: ['http://localhost:3000', 'http://localhost:4321', 'http://localhost:5173'],
+  origin: ['http://localhost:3000', 'http://localhost:4321', 'http://localhost:5173','*'],
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -49,11 +50,11 @@ app.get('/ws', upgradeWebSocket(() => {
     }
   };
 }));
-app.get('/', (c) => c.json({ message: 'API is running' }));
 // Otras rutas
 app.route('/api', backupRoute);
 app.route('/api', newsyncRoute);
 app.route('/api', wsRouter);
+app.route('/', staticRoutes);
 // Error handlers
 app.notFound((c) => {
   return c.json({
