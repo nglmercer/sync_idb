@@ -2,6 +2,7 @@
   "name": "sync_idb",
   "scripts": {
     "dev": "bun run --hot src/index.ts",
+    "test": "bun test",
     "build": "tsc",
     "build:all": "bun run build:linux-x64 && bun run build:linux-arm64 && bun run build:windows && bun run build:macos && bun run build:macos-arm64",
     "build:linux-x64": "bun build src/index.ts --outfile dist/sync_idb-linux-x64 --target bun --compile --minify",
